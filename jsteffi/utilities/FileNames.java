@@ -1,4 +1,4 @@
-package utilities;
+//package utilities;
 
 import java.lang.reflect.*;
 
@@ -20,7 +20,11 @@ public interface FileNames {
 	public static void main(String[] args) {
 		Field[] fields = FileNames.class.getDeclaredFields();
 		for(Field field : fields) {
-			System.out.println(field);
+			try {
+				System.out.println(field.get(FileNames.class));
+			} catch (Exception e) {
+				
+			}
 		}
 	}
 	
