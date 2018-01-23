@@ -1,0 +1,1 @@
+"C:\Users\localuser\Desktop\Baylies Lab\fiji-win64\Fiji.app\ImageJ-win64.exe" -run "A Steffi Exper"
