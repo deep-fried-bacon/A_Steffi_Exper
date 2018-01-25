@@ -1,4 +1,4 @@
-package utilities;
+package jsteffi.utilities;
 
 import java.io.File;
 
@@ -6,11 +6,16 @@ import ij.*;
 
 
 public class ImagePlusPlus {
+	
+	
+	
+
 	public File path;
 	public String name;
-	public ImagePlus imp;
+	private ImagePlus imp;
 	
 	public ImagePlusPlus(File imp_path) {
+		//probs should add some sort of exception throw if file isn't an image
 		path = imp_path;
 		name = imp_path.getName();
 	}
@@ -20,6 +25,7 @@ public class ImagePlusPlus {
 			return imp;
 		}
 		else {
+			
 			return IJ.openImage(path.getPath());
 		}
 	}
