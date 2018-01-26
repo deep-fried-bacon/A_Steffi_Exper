@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.nio.file.Files;
 import java.nio.charset.Charset;
 
-//import utilities.*;
 
 
 
@@ -31,9 +30,7 @@ public class Experiment {
 	public ArrayList<Hemisegment> hemisegs;
 	
 	
-		//or public ArrayList<String> HemisegFiles;
-	
-	//public ArrayList<Hemisegment> hemisegs;
+
 	
 	public Experiment() {
 		insts.add(this);
@@ -74,7 +71,7 @@ public class Experiment {
 		try {
 			String tempDate = nameList[0];
 			if (tempDate.length() != 6){
-				//raiseSomeErrorHere
+				/*** exception ***/
 				IJ.log("date of exper folder name is not 6 chars");
 			}
 			else {
