@@ -22,10 +22,11 @@ public class Cell {
 	public ArrayList<Double> roiY = new ArrayList<Double>(0);
 	
 	
-	public Overlay nucRois;
+	//public Overlay nucRois = new Overlay();
+	public ArrayList<Nucleus> nucs = new ArrayList<Nucleus>();
 	
 	
-	public Hashtable<String, double[]> nuc_data;
+	//public Hashtable<String, double[]> geoNucData;
 		//or double[][] nuc_data;
 		//or ArrayList<ArrayList<double>> nuc_data;
 		//or HashTable<double[]> nuc_data;
@@ -34,12 +35,15 @@ public class Cell {
 	
 	
 	
-	public Cell(Hemimsegment h, File roiCsvPath, int vlMuscleNum, Calibration cal) {
-		hemiseg = h;
-		vlNum = vlMuscleNum;
+	public Cell(Hemisegment hemiseg, File roiPath, int vlNum, Calibration cal) {
+		this.hemiseg = hemiseg;
+		this.vlNum = vlNum;
 		
-		roiPath = roiCsvPath;
+		this.roiPath = roiPath;
 		roi = openRoiCsv(roiPath, cal);
+		
+		//nucRois = 
+		//nucRois = makeNucRois();
 	}
 		
 		
@@ -58,7 +62,7 @@ public class Cell {
 					roiY.add(cal.getRawY(temp));
 				}
 				else {
-					//throw exception
+					/*** exception ***/
 					IJ.log("shit, in Cell.openRoiCsv, got x value with no matching y value");
 				}
 			}
@@ -69,10 +73,36 @@ public class Cell {
 			return new PolygonRoi(xF,yF,2);
 		}
 		catch (FileNotFoundException e) {
+			/*** exception ***/
 			IJ.log("in Cell.openRoiCsv exception: " + e);
 			return null;
 		}
 	}
+		
+	
+	// public Overlay makeNucRois() {
+		
+	// }
+	
+	// public void loadNucData() {
+		
+	// }
+	
+	
+	public Hashtable<String,double[]> readRT(ResultsTable rt) {
+		String[] headings = rt.getHeadings();
+		//int  rowCount = rt.getCounter();
+		Hashtable<String,double[]> data = new Hashtable<String,double[]>(headings.length);
+		
+		//double[][] cols = new double[headings.length][rowCount];
+		for (int i = 0; i < headings.length; i++) {
+			data.put(headings[i],rt.getColumnAsDoubles(rt.getColumnIndex(headings[i])));
+			//cols[i] = rt.getColumnAsDoubles(rt.getColumnIndex(headings[i]));
+		}
+		return data;
+		
+	}
+		
 		
 	// ArrayList<double> to float[]
 	public float[] ArrLisDouToArrFlo(ArrayList<Double> arrLis) {
@@ -82,6 +112,8 @@ public class Cell {
 		}
 		return f;
 	}
+		
+		
 		
 		
 		

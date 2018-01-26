@@ -44,6 +44,8 @@ public class Experiment {
 		loadChannels();
 
 		createHemisegs();
+		
+		loadNucs();
 	}
 	
 	
@@ -151,6 +153,12 @@ public class Experiment {
 		}
 		
 	
+	}
+	
+	public void loadNucs() {
+		for (Hemisegment h : hemisegs) {
+			h.loadNucs();
+		}
 	}
 	
 	
