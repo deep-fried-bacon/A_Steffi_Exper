@@ -4,7 +4,6 @@ import ij.io.*;
 import ij.gui.*;
 import ij.measure.*;
 
-
 import java.util.*;
 import java.io.*;
 import java.time.LocalDate;
@@ -22,13 +21,19 @@ public class Cell {
 	public ArrayList<Double> roiY = new ArrayList<Double>(0);
 	
 	public boolean nucsLoaded = false;
-	
 
 	public ArrayList<Nucleus> nucs = new ArrayList<Nucleus>();
+	public int nucCount;
 	
+	/*** P stands for Pointers 
+		 the idea is that the data is "stored" in the Nucleus objects 
+		 and the objects in cell are simply pointing to them ***/
+		 
+	public ArrayList<Roi> nucRoiP;
 	
-
-	
+	/*** nucGeoDataP.get("<Column Heading>");
+		 nucGeoDataP.get("<Column Heading>").get(<NucId>); ***/
+	public Hashtable<String,ArrayList<MutableDouble>> nucGeoDataP;
 	
 	
 	public Cell(Hemisegment hemiseg, File roiPath, int vlNum, Calibration cal) {
@@ -37,9 +42,7 @@ public class Cell {
 		
 		this.roiPath = roiPath;
 		roi = openRoiCsv(roiPath, cal);
-
 	}
-		
 		
 		
 	public Roi openRoiCsv(File roiCsvPath, Calibration cal) {
@@ -60,7 +63,6 @@ public class Cell {
 					IJ.log("shit, in Cell.openRoiCsv, got x value with no matching y value");
 				}
 			}
-			
 			float[] xF = ArrLisDouToArrFlo(roiX);
 			float[] yF = ArrLisDouToArrFlo(roiY);
 			
@@ -73,10 +75,8 @@ public class Cell {
 		}
 	}
 		
-	
-
-	
-	public Hashtable<String,double[]> readRT(ResultsTable rt) {
+		
+/* 	public Hashtable<String,double[]> readRT(ResultsTable rt) {
 		String[] headings = rt.getHeadings();
 		Hashtable<String,double[]> data = new Hashtable<String,double[]>(headings.length);
 		
@@ -86,9 +86,35 @@ public class Cell {
 		return data;
 		
 	}
+	 */	
 		
-		
-	// ArrayList<double> to float[]
+	public boolean makeNucDataPointers() {
+		if (nucsLoaded == false) return false;
+		else {
+			nucRoiP = new ArrayList<Roi>(nucCount);
+			//headings = 
+			nucGeoDataP = new Hashtable<String,ArrayList<MutableDouble>>(hemiseg.geoHeadings.length);
+			for (String heading : hemiseg.geoHeadings) {
+					nucGeoDataP.put(heading,new ArrayList<MutableDouble>(nucCount));
+			}			
+			for (int i = 0; i < nucCount; i++) {
+				nucRoiP.add(i, nucs.get(i).roi);
+				
+				for (String heading : hemiseg.geoHeadings) {
+					
+					/*** nucs --> ArrayList<Nucleus>
+						 .get(i) --> Nucleus
+						 Nucleus.geoData --> Hashtable<String,MutableDouble>
+						 geoData.get(Heading --> String) --> MutableDouble ***/
+					MutableDouble val = nucs.get(i).geoData.get(heading);
+					nucGeoDataP.get(heading).add(i,val);
+				}				
+			}
+			return true;
+		}
+	}
+	
+	/*** ArrayList<double> to float[] ***/
 	public float[] ArrLisDouToArrFlo(ArrayList<Double> arrLis) {
 		float[] f = new float[arrLis.size()];
 		for (int i = 0; i < arrLis.size(); i++) {
@@ -96,10 +122,6 @@ public class Cell {
 		}
 		return f;
 	}
-		
-		
-		
-
 }
 
 

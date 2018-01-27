@@ -7,14 +7,21 @@ import ij.plugin.filter.*;
 
 import java.util.*;
 
+import jsteffi.utilities.*;
+
 
 public class Nucleus {
-	public Roi roi;
-	public Hashtable<String, Double> geoData;
-	public Hashtable<String, Double[]> intensData;
 	
-	public Nucleus (Roi roi, Hashtable<String, Double> geoData) {
+	public int id;
+	public Roi roi;
+	
+	public Hashtable<String, MutableDouble> geoData;
+	public Hashtable<String, MutableDouble[]> intensData;
+	
+	public Nucleus (int id, Roi roi, Hashtable<String, MutableDouble> geoData) {
+		this.id = id;
 		this.roi = roi;
 		this.geoData = geoData;
+		
 	}
 }

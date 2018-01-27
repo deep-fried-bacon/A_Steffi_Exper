@@ -2,14 +2,11 @@ package jsteffi;
 import ij.*;
 import ij.io.*;
 
-
 import java.util.*;
 import java.io.*;
 import java.time.LocalDate;
 import java.nio.file.Files;
 import java.nio.charset.Charset;
-
-
 
 
 public class Experiment {
@@ -29,9 +26,6 @@ public class Experiment {
 	public ArrayList<File> hemisegFileList;
 	public ArrayList<Hemisegment> hemisegs;
 	
-	
-
-	
 	public Experiment() {
 		insts.add(this);
 		
@@ -44,7 +38,6 @@ public class Experiment {
 		
 		loadNucs();
 	}
-	
 	
 	public void close() {
 		insts.remove(insts.indexOf(this));
@@ -87,9 +80,6 @@ public class Experiment {
 		
 	}
 	
-	
-
-	
 	public void loadChannels() {
 		File metadata = new File(path, name+"_metadata.py");
 		List<String> chanStrL = new ArrayList<String>();
@@ -120,10 +110,7 @@ public class Experiment {
 					//boolean keep = False
 					channels.put(k,v);
 				}
-			}
-				
-				
-			
+			}			
 			else if (chanStrL.get(i).contains("channels {")) {
 				go = true;
 			}
@@ -131,48 +118,33 @@ public class Experiment {
 	
 	}
 	
-
-	
 	public void createHemisegs() {
 		hemisegFileList = new ArrayList<File>();
 		hemisegs = new ArrayList<Hemisegment>();
 		File[] subDirs = path.listFiles();
 		for(int i = 0; i < subDirs.length; i++) {
 			
-			
 		//IJ.log(subDirs[i].getName() + " - " + subDirs[
 			if (subDirs[i].getName().startsWith(name) && subDirs[i].isDirectory()) {
 				hemisegFileList.add(subDirs[i]);
 				
 				hemisegs.add(new Hemisegment(this, subDirs[i]));
-			}
-			
+			}	
 		}
-		
-	
 	}
 	
 	public void loadNucs() {
 		for (Hemisegment h : hemisegs) {
 			h.loadNucs();
+			h.makeCellDataPointers();
 		}
 	}
-	
-	
-	
-	
-	
-	
-	public void exportNucData(ArrayList<String> headings){
-		//make default outputDir and outputFileName
-		//exportNucData(headings, outputDir, outputFileName);
+		
+/* 	public void exportNucData(ArrayList<String> headings){
+		// make default outputDir and outputFileName
+		// exportNucData(headings, outputDir, outputFileName);
 	}
 	public void exportNucData(ArrayList<String> headings, File outputDir, String ouptutFileName){
 		
-	}
-	
-	
-	
-	
-	
+	}	 */
 }

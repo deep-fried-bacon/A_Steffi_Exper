@@ -9,11 +9,10 @@ import java.util.*;
 import java.io.*;
 import java.time.LocalDate;
 
-//import jsteffi.utilities.*;
+import jsteffi.utilities.*;
 
 
 public class Hemisegment { 
-	
 	public static int GEO = 159457; //without display label 158433
 	public static int INTENS = 1934366 ; //without display label 1933342
 	
@@ -24,8 +23,6 @@ public class Hemisegment {
 	public static String VL3_CSV_SUF =  "_XY-VL3.csv";
 	public static String VL4_CSV_SUF =  "_XY-VL4.csv";
 	
-	
-	
 	public Experiment exper;
 	
 	public File path;
@@ -33,10 +30,12 @@ public class Hemisegment {
 	public ArrayList<File> fileList = new ArrayList<File>();
 	
 	public ResultsTable rt;
+	public String[] geoHeadings;
 	
 
 	public ImagePlus hyp = null;
 	public Calibration cal = null;
+	public int sliceCount;
 
 	public ImagePlus nucBin = null;
 	
@@ -45,9 +44,6 @@ public class Hemisegment {
 	
 	public Cell vl3 = null;
 	public Cell vl4 = null;
-
-	
-
 	
 	public Hemisegment(Experiment exper, File hsPath) {
 		this.exper = exper;
@@ -65,6 +61,7 @@ public class Hemisegment {
 			if (allFiles[i].getName().equals(buildFileName(HYP_SUF))) {
 				hyp = IJ.openImage(allFiles[i].getPath());
 				cal = hyp.getCalibration();
+				sliceCount = hyp.getNSlices();
 			}
 			else if (allFiles[i].getName().equals(buildFileName(NUC_BIN_SUF))) {
 				nucBin = IJ.openImage(allFiles[i].getPath());
@@ -93,7 +90,6 @@ public class Hemisegment {
 	}
 	
 	public void loadNucs() {
-
 		nucBin.setOverlay(null);
 		
 		rt = new ResultsTable();
@@ -105,43 +101,59 @@ public class Hemisegment {
 	
 		pa.analyze(nucBin);
 		Overlay nucRoisH = nucBin.getOverlay();
-			
+		
+		int vl3NucCount = 0;
+		int vl4NucCount = 0;
+		
+		geoHeadings = rt.getHeadings();
+		
 		for (int i = 0; i < nucRoisH.size(); i++) {
-			Hashtable<String,Double> nucRow = getRtRow(rt,i);
+			Hashtable<String,MutableDouble> nucRow = getRtRow(rt,i);
 			Roi nucRoi = nucRoisH.get(i);
 			int nucRoiX = (int)nucRoi.getContourCentroid()[0];
 			int nucRoiY = (int)nucRoi.getContourCentroid()[1];
 
 			if (vl3 != null && vl3.roi.contains(nucRoiX,nucRoiY)) {
-				vl3.nucs.add(new Nucleus(nucRoi,nucRow));
+				vl3.nucs.add(new Nucleus(vl3NucCount, nucRoi, nucRow));
+				vl3NucCount++;
 			}
 			else if (vl4 != null && vl4.roi.contains(nucRoiX,nucRoiY)) {
-				vl4.nucs.add(new Nucleus(nucRoi,nucRow));
+				vl4.nucs.add(new Nucleus(vl4NucCount, nucRoi, nucRow));
+				vl4NucCount++;
 			}
 			else {
 				/*** exception ***/
 				IJ.log("uh-oh nucRoi not contained in any cells");
 			}
 		}
-		
-		if (vl3 != null) vl3.nucsLoaded = true;
-		if (vl4 != null) vl4.nucsLoaded = true;
+		if (vl3 != null) {
+			vl3.nucsLoaded = true;
+			vl3.nucCount = vl3.nucs.size();
+		}
+		if (vl4 != null) {
+			vl4.nucsLoaded = true;
+			vl4.nucCount = vl4.nucs.size();
+		}
 		nucBin.setOverlay(null);
-		
-
 	}
 	
 	
-	public static Hashtable<String,Double> getRtRow(ResultsTable rt, int rowNum) {
+	public void makeCellDataPointers() {
+		vl3.makeNucDataPointers();
+		vl4.makeNucDataPointers();
+	}
+	
+	
+	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum) {
 		String[] headings = rt.getHeadings();
 	
 		int colCount = headings.length;
-		IJ.log("rowNum = " + rowNum);
-		Hashtable<String,Double> row = new Hashtable<String,Double>(colCount);
+		//IJ.log("rowNum = " + rowNum);
+		Hashtable<String,MutableDouble> row = new Hashtable<String,MutableDouble>(colCount);
 		for (int i = 0; i < colCount; i++) {
 			
 			String heading = headings[i];
-			IJ.log("heading = " + heading);
+			//IJ.log("heading = " + heading);
 			
 			int colIndex = rt.getColumnIndex(heading);
 			if (colIndex == ResultsTable.COLUMN_NOT_FOUND) {
@@ -152,14 +164,13 @@ public class Hemisegment {
 			}
 			else {
 			
-				Double val = rt.getValueAsDouble(colIndex,rowNum);
+				double val = rt.getValueAsDouble(colIndex,rowNum);
 			
-				row.put(heading,val);
+				row.put(heading,new MutableDouble(val));
 			}
 		}
 		return row;
 	}
-	
 	
 	
 	public String buildFileName(String suffix) {
@@ -168,12 +179,6 @@ public class Hemisegment {
 	public File buildFile(String suffix) {
 		return new File(path, name + suffix);
 	}
-	
-	
-	
-	
-	
-	
 	
 }
 
