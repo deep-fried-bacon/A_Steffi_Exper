@@ -138,10 +138,19 @@ public class Hemisegment {
 	}
 	
 	
+	
+	
+	/* 
+	public void makeNucIntensData() {
+		
+	} */
+	
 	public void makeCellDataPointers() {
 		vl3.makeNucDataPointers();
 		vl4.makeNucDataPointers();
 	}
+	
+	
 	
 	
 	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum) {

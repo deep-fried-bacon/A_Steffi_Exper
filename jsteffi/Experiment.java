@@ -30,7 +30,7 @@ public class Experiment {
 		insts.add(this);
 		
 		makePath();		// instantiates path
-		experView = new ExperimentView(this);
+		//experView = new ExperimentView(this);
 		
 		loadChannels();
 
