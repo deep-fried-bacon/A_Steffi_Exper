@@ -27,12 +27,16 @@ public class A_Steffi_Exper implements PlugIn{
 		//new A_Steffi_Exper();
 		//Hemiseg h = new Hemiseg(pathtemp);
 		//Cell c = new Cell(pathtemp);
-
+		
+		Experiment exper = new Experiment();
+		//exper.hemisegs.get(0).hyp.show();
+		
 		if(inst_count == 1) {
 			Opener myOpener = new Opener();
 			myOpener.open(py_path);	
 		}
-		Experiment exper = new Experiment();
+		
+		
 		
 		//IJ.log("cool");
 	}

@@ -6,6 +6,8 @@ import ij.measure.*;
 import ij.process.*;
 import ij.plugin.*;
 
+import fiji.threshold.*;
+
 
 import java.util.*;
 import java.io.*;
@@ -51,6 +53,10 @@ public class Cell {
 	int zLength;		// slices
 	
 	
+	/** dummy constructor for jython static calls **/
+	//public Cell() {
+		
+	//}
 	public Cell(Hemisegment hemiseg, File roiPath, int vlNum, Calibration cal) {
 		this.hemiseg = hemiseg;
 		this.vlNum = vlNum;
@@ -164,6 +170,87 @@ public class Cell {
 		
 	}
 	
+	/** def got to rename **/
+	public void erm() {
+		/** requires cellHyp **/
+		Duplicator d = new Duplicator();
+		int nucChan = hemiseg.exper.channels.get("Nuclei");
+		//int lastC = firstC;
+		//int firstZ = 1;
+		//int lastZ = hemiseg.getNSlices();
+		//int firstT = 1;
+		//int lastT = 1;
+		ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);
+		
+		ResultsTable rt = new ResultsTable();
+		for (Roi roi : nucRoiP) {
+			nucStack.setRoi(roi);
+			ImagePlus sinNucStack = nucStack.duplicate();	//single nucleus stack
+			/** I don't think I need to do nucChan.deleteRoi() until the end
+				because it'll be replaced by the next one, but I need to 
+				be on the look out **/
+				
+				
+				
+			/** should make orthView version that takes which channels I want **/
+			
+			ImagePlus[] temp = orthView(sinNucStack,1,0);
+			ImagePlus nucOrthView = temp[0];
+			
+			ImagePlus nucOrthProjection = ZProjector.run(nucOrthView, "max");
+			Auto_Threshold at = new Auto_Threshold();
+			Object[] temp2 = at.exec(nucOrthProjection,
+										"IsoData",false, false, true, false, false, false);
+			ImagePlus nucOrthThresh = (ImagePlus)temp2[1];
+			
+			
+			
+			nucOrthThressh.setOverlay(null);
+
+			rt.reset();
+			ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_NONE,
+										Measurements.FERET,rt,0,Double.POSITIVE_INFINITY);
+			
+			
+			pa.analyze(nucOrthThresh);
+				
+			Overlay nucRoisH = nucBin.getOverlay();
+			
+			if (!(nucRoisH.size == 1)) {
+				/** exception or something **/
+				IJ.log("fuck, multiple particles for nuc orthview")
+				continue;
+			}
+			
+			
+			
+			
+				
+		
+			
+			double minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),0);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			//nucOrthThresh.show();
+			//break;
+			
+			
+			
+		}
+		
+	}
+	
+	
+	
+	
 	/** for the mo. just does nuclei channel and cell channel**/
 	public void makeCellXOrthView() {
 		//IJ.log("starting makeCellXOrthView"); 
@@ -224,7 +311,7 @@ public class Cell {
 		0 --> false
 		1 --> true
 		other --> error **/  
-	public ImagePlus[] orthView(ImagePlus imp, int xToStack, int yToStack) {
+	public static ImagePlus[] orthView(ImagePlus imp, int xToStack, int yToStack) {
 		if (!(xToStack == 0 || xToStack == 1)) {
 			/*** exception ***/
 			IJ.log("value passed to orthView for yxToStack must equal 0 or 1");
@@ -237,40 +324,83 @@ public class Cell {
 		} 
 		ImageStack impStack = imp.getStack();
 		
+		int staticXLength = imp.getDimensions()[0];
+		int staticYLength = imp.getDimensions()[1];
+		
+		int staticChannelCount = imp.getDimensions()[2];
+		int staticZLength = imp.getDimensions()[3];
 		
 		
-		//int outImpCount = //((if(xStack){1}else{0})*channelCount + (if(xStack){1}else{0})*channelCount;
 		
-		ImagePlus[] outImps = new ImagePlus[xToStack*channelCount + yToStack*channelCount];
-		Arrays.fill(outImps,new ImagePlus());
+		//int outImpCount = //((if(xStack){1}else{0})*staticChannelCount + (if(xStack){1}else{0})*staticChannelCount;
 		
-
-		if (xToStack == 1) {
-			for (int channel = 1; channel <= channelCount; channel++) {
-				ImageStack sliceHolder = new ImageStack(yLength,zLength);
-				for (int x = 0; x < xLength; x++) {
-					byte[] xSlice = new byte[yLength*zLength];
-					for (int z = 0; z < zLength; z++) {
+		//ImagePlus[] outImps = new ImagePlus[xToStack*(staticChannelCount+1) + yToStack*(staticChannelCount+1)];
+		//Arrays.fill(outImps,new ImagePlus());
+		//ImageStack[] outStacks = new ImageStack[];
+		ImageStack[] outStacks = new ImageStack[staticChannelCount+1];
+		if (xToStack == 1) { 
+			
+			for (int channel = 1; channel <= staticChannelCount; channel++) {
+				ImageStack sliceHolder = new ImageStack(staticYLength,staticZLength);
+				//IJ.log("sliceHolder = new, " + sliceHolder);
+				for (int x = 0; x < staticXLength; x++) {
+					byte[] xSlice = new byte[staticYLength*staticZLength];
+					for (int z = 0; z < staticZLength; z++) {
 						ImageProcessor ip = impStack.getProcessor(imp.getStackIndex(channel,z+1,1));			
+						//IJ.log("ip = impstack.getProcessor(...), " + ip);
 						byte[] pixels = (byte[])ip.getPixels();
 						
-						//for (int y = 0; y < yLength; y++) {
+						//for (int y = 0; y < staticYLength; y++) {
 						int y = 0;
-						while ((y*xLength + x) < pixels.length) {
+						while ((y*staticXLength + x) < pixels.length && (z*staticYLength + y) < xSlice.length) {
+							
+							xSlice[z*staticYLength + y] = pixels[y*staticXLength + x];
 							y++;
-							xSlice[z*xLength + y] = pixels[y*xLength + x];
 						}
 						//}
 					
 					}
-					ByteProcessor bp = new ByteProcessor(yLength,zLength,xSlice);
+					ByteProcessor bp = new ByteProcessor(staticYLength,staticZLength,xSlice);
+					//IJ.log("bp = new..., " + bp);
 					sliceHolder.addSlice(bp);
 				}
-				ImagePlus temp = new ImagePlus();
-				temp.setStack(sliceHolder);
-				outImps[channel] = (temp);
+				//ImagePlus temp = new ImagePlus();
+				//IJ.log("temp = new ImagePlus(...), " + temp);
+				//temp.setStack(sliceHolder.duplicate());
+				//IJ.log("sliceHolder, " + sliceHolder);
+				//IJ.log("temp.setStack(...), " + temp);
+				//outImps[channel] = (temp.duplicate());
+				//IJ.log("outImps[...], " + outImps);
+				IJ.log("sliceHolder.size()="+sliceHolder.size());
+				IJ.log("sliceHolder = " + sliceHolder);
+				
+				
+				outStacks[channel] = (sliceHolder.duplicate());
+				IJ.log("outStacks["+channel+"] = " + outStacks[channel]);
 			}
 			
+		//IJ.log("outStacks[0].size()="+outStacks[0].size());
+		//ImageStack outStack = RGBStackMerge.mergeStacks(outStacks[0],outStacks[1],null,true);
+		//ImagePlus temp = new ImagePlus();
+		//temp.setStack(outStack);
+		//temp.show();
+			
+		
+			
+			
+		}
+		IJ.log("outStacks = " + outStacks);
+		IJ.log("outStacks.length = " + outStacks.length);
+		//if (outStacks.length > 0) {
+			//IJ.log("outStacks[0] = " + outStacks[0]);
+		//}
+		
+		
+		ImagePlus[] outImps = new ImagePlus[outStacks.length - 1];
+		for (int i = 0; i < outImps.length; i++) {
+			ImagePlus temp = new ImagePlus((""+(i+1)), outStacks[i+1]);
+			//temp.show();
+			outImps[i] = temp.duplicate();
 			
 		}
 		 
