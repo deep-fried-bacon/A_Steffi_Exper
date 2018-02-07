@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 public class Experiment {
 	public static ArrayList<Experiment> insts = new ArrayList<Experiment>();
 	public static boolean testing = true;
+	//public static DEFAULT
 	
 	public File path;
 	
@@ -25,6 +26,10 @@ public class Experiment {
 	
 	public ArrayList<File> hemisegFileList;
 	public ArrayList<Hemisegment> hemisegs;
+	
+	
+	public int specCount = 0;
+	
 	
 	public Experiment() {
 		insts.add(this);
@@ -139,11 +144,120 @@ public class Experiment {
 			h.makeCellDataPointers();
 		}
 	}
+	
+	
+	/** give null ArrayLists if you don't 
+		want any data printed from that set of data 
 		
-/* 	public void exportNucData(ArrayList<String> headings){
+		if String FileSuf == null?
+	**/
+ 	// public void exportNucData(String FileSuf, ArrayList<String> geoHeadings, ArrayList<String> intensHeadings, ArrayList<String> data3DHeadings){
 		// make default outputDir and outputFileName
 		// exportNucData(headings, outputDir, outputFileName);
+	// }
+	
+	
+	
+		/** for now only dealing data3D and geo **/
+	public boolean exportNucData(String FileSuf, ArrayList<String> geoHeadings, /** ArrayList<String> intensHeadings,**/ ArrayList<String> data3DHeadings){
+		IJ.log("geoHeadings = " + geoHeadings);
+		IJ.log("data3DHeadings = " + data3DHeadings);
+		
+		File outCsv = new File(path, name + "_" + FileSuf + ".csv");
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(outCsv));
+			
+			String headings = "Hemisegment,Cell,NucID,";
+			for (String heading : geoHeadings) {
+				headings += (heading + ",");
+			}
+			for (String heading : data3DHeadings) {
+				headings += (heading + ",");
+			}
+			
+			writer.write(headings);
+			for (Hemisegment hemiseg : hemisegs) {
+				
+				for (Nucleus nuc : hemiseg.vl3.nucs) {
+					writer.newLine();
+
+					String temp = (hemiseg.name + ",vl3," + nuc.id + ",");
+					for (String heading : geoHeadings) {
+						temp += (nuc.geoData.get(heading) + ",");
+					}
+					
+					for (String heading : data3DHeadings) {
+						if (nuc.data3D == null) {
+							IJ.log(temp);
+							temp += "*,";
+
+						}
+						else {
+							temp += (nuc.data3D.get(heading) + ",");
+						}
+					}
+					writer.write(temp);
+
+				}
+				writer.newLine();
+				
+				
+				
+				for (Nucleus nuc : hemiseg.vl4.nucs) {
+					writer.newLine();
+
+					String temp = (hemiseg.name + ",vl4," + nuc.id + ",");
+					for (String heading : geoHeadings) {
+						temp += (nuc.geoData.get(heading) + ",");
+					}
+					for (String heading : data3DHeadings) {
+						if (nuc.data3D == null) {
+							IJ.log(temp);
+							temp += "*,";
+						}
+						else {
+							temp += (nuc.data3D.get(heading) + ",");
+						}
+					}
+					writer.write(temp);
+
+				}
+				writer.newLine();
+				
+				
+				
+
+			}
+			
+			
+			writer.close();
+			return true;
+		}
+		catch (FileNotFoundException e) {
+			/** deal with exception appropriately **/
+			IJ.log("FileNotFoundException in Experiment.exportNucData");
+			return false;
+		}
+		catch (IOException e) {
+			/** deal with exception appropriately **/
+			IJ.log("IOException in Experiment.exportNucData");
+			return false;
+		}
+		
+		
+
 	}
+		// make default outputDir and outputFileName
+		// exportNucData(headings, outputDir, outputFileName);
+	
+	
+	
+	
+	
+	
+	
+	/*
 	public void exportNucData(ArrayList<String> headings, File outputDir, String ouptutFileName){
 		
 	}	 */

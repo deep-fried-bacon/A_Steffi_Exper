@@ -5,6 +5,7 @@ import ij.gui.*;
 import ij.measure.*;
 import ij.process.*;
 import ij.plugin.*;
+import ij.plugin.filter.*;
 
 import fiji.threshold.*;
 
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import jsteffi.utilities.*;
 
 public class Cell {
+	
 	public Hemisegment hemiseg;
 	public int vlNum;
 	
@@ -30,15 +32,20 @@ public class Cell {
 	public ArrayList<Nucleus> nucs = new ArrayList<Nucleus>();
 	public int nucCount;
 	
-	/*** P stands for Pointers 
-		 the idea is that the data is "stored" in the Nucleus objects 
-		 and the objects in cell are simply pointing to them ***/
+	/** 
+		P stands for Pointers 
+		the idea is that the data is "stored" in the Nucleus objects 
+		and the objects in cell are simply pointing to them 
+	**/
+		 
+		 
 		 
 	public ArrayList<Roi> nucRoiP;
 	
 	/*** nucGeoDataP.get("<Column Heading>");
 		 nucGeoDataP.get("<Column Heading>").get(<NucId>); ***/
 	public Hashtable<String,ArrayList<MutableDouble>> nucGeoDataP;
+	public Hashtable<String,ArrayList<MutableDouble>> nucData3DP;
 	
 	
 	
@@ -57,6 +64,7 @@ public class Cell {
 	//public Cell() {
 		
 	//}
+	
 	public Cell(Hemisegment hemiseg, File roiPath, int vlNum, Calibration cal) {
 		this.hemiseg = hemiseg;
 		this.vlNum = vlNum;
@@ -64,7 +72,6 @@ public class Cell {
 		this.roiPath = roiPath;
 		roi = openRoiCsv(roiPath, cal);
 	}
-		
 		
 	public Roi openRoiCsv(File roiCsvPath, Calibration cal) {
 		try (Scanner sc = new Scanner(roiCsvPath)) {
@@ -96,8 +103,6 @@ public class Cell {
 		}
 	}
 	
-	
-		
 /* 	public Hashtable<String,double[]> readRT(ResultsTable rt) {
 		String[] headings = rt.getHeadings();
 		Hashtable<String,double[]> data = new Hashtable<String,double[]>(headings.length);
@@ -116,6 +121,7 @@ public class Cell {
 			nucRoiP = new ArrayList<Roi>(nucCount);
 			//headings = 
 			nucGeoDataP = new Hashtable<String,ArrayList<MutableDouble>>(hemiseg.geoHeadings.length);
+			
 			for (String heading : hemiseg.geoHeadings) {
 					nucGeoDataP.put(heading,new ArrayList<MutableDouble>(nucCount));
 			}			
@@ -136,6 +142,30 @@ public class Cell {
 		}
 	}
 	
+	public boolean makeNucData3DPointers() {
+		if (nucsLoaded == false) return false;
+		else if (nucs.get(0).data3D == null) return false;
+		else {
+			Set<String> keys = nucs.get(0).data3D.keySet();
+			//Hashtable<String,ArrayList<MutableDouble>> nucData3DP = new Hashtable<String,MutableDouble[]>(keys.size());
+			nucData3DP = new Hashtable<String,ArrayList<MutableDouble>>(keys.size());
+
+			for (String key : keys) {
+				nucData3DP.put(key,new ArrayList<MutableDouble>(nucCount));
+				
+			}
+			for (int i = 0; i < nucCount; i++) {
+				for (String key : keys) {
+					MutableDouble val = nucs.get(i).data3D.get(key);
+					nucData3DP.get(key).add(i, val);
+				}
+			}
+		}
+		return true;
+	}
+	
+	
+	//public static
 	
 	
 	/** <edit when less tired> **/
@@ -172,6 +202,7 @@ public class Cell {
 	
 	/** def got to rename **/
 	public void erm() {
+		int specCount = 0;
 		/** requires cellHyp **/
 		Duplicator d = new Duplicator();
 		int nucChan = hemiseg.exper.channels.get("Nuclei");
@@ -183,8 +214,10 @@ public class Cell {
 		ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);
 		
 		ResultsTable rt = new ResultsTable();
-		for (Roi roi : nucRoiP) {
-			nucStack.setRoi(roi);
+		//for (Roi roi : nucRoiP) {
+			
+		for (int i = 0; i < nucs.size(); i++) {
+			nucStack.setRoi(nucRoiP.get(i));
 			ImagePlus sinNucStack = nucStack.duplicate();	//single nucleus stack
 			/** I don't think I need to do nucChan.deleteRoi() until the end
 				because it'll be replaced by the next one, but I need to 
@@ -204,34 +237,92 @@ public class Cell {
 			ImagePlus nucOrthThresh = (ImagePlus)temp2[1];
 			
 			
-			
-			nucOrthThressh.setOverlay(null);
+			//ImageProcessor nucOrthThreshIp = nucOrthThresh.getProcessor();
+			nucOrthThresh.setCalibration(hemiseg.cal);
+			nucOrthThresh.setOverlay(null);
 
 			rt.reset();
-			ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_NONE,
-										Measurements.FERET,rt,0,Double.POSITIVE_INFINITY);
+			
+			int msr = Measurements.FERET + Measurements.AREA + Measurements.CENTROID;
+			ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_OVERLAY_OUTLINES, msr, rt, 0, Double.POSITIVE_INFINITY);
 			
 			
 			pa.analyze(nucOrthThresh);
+			Overlay nucRoisH = nucOrthThresh.getOverlay();
+			nucOrthThresh.setOverlay(null);
+
 				
-			Overlay nucRoisH = nucBin.getOverlay();
-			
-			if (!(nucRoisH.size == 1)) {
+			/**gotta fix this, because this will happen, if for no other reason then vo nuclei**/
+			/**also should consider despeckle**/
+			/* if (nucRoisH == null) {
+				
+				IJ.log("crap nucRoisH in erm = null");
+				//continue;
+				if (rt.size() == 0) {
+					continue;
+				}
+			} */
+			double minFeret;
+			//double y;
+			double area;
+			if (nucRoisH.size() > 1) {
 				/** exception or something **/
-				IJ.log("fuck, multiple particles for nuc orthview")
+				int count = 0;
+				int index = -1;
+				//IJ.log(hemiseg.name + " vl"+vlNum);
+				for (int j = 0; j < nucRoisH.size(); j++) {
+					//IJ.log("nucRoisH.get("+j+") = " + nucRoisH.get(j));
+					//IJ.log("\tnucRoisH.get("+j+").getStatistics().area = " + nucRoisH.get(j).getStatistics().area);
+					if (nucRoisH.get(j).getStatistics().area > 75) {
+						count++;
+						index = j;
+						
+					}
+				}
+				
+				if (count == 1) {
+					minFeret = nucRoisH.get(index).getFeretValues()[2];
+					area = nucRoisH.get(index).getStatistics().area;
+					//y = nucRoisH.get(index).getStatistics}().yCentroid;
+				} else {
+					nucOrthThresh.show();
+					//IJ.log("fuck, multiple particles for nuc orthview");
+					IJ.log(hemiseg.name + " vl"+vlNum);
+
+					for (int j = 0; j < nucRoisH.size(); j++) {
+						IJ.log("    \t" + nucRoisH.get(j).getStatistics().area);
+					}
+					hemiseg.exper.specCount++;
+					continue;
+				}
+					
+			} 
+			else if (nucRoisH.size() < 1) {
+				nucOrthThresh.show();
+				IJ.log("fuck, no particles for nuc orthview");
 				continue;
 			}
-			
-			
-			
-			
 				
+			else {
+				minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),0);
+				//y = rt.getValueAsDouble(rt.getColumnIndex("Y"),0);
+				area = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
+			}	
 		
 			
-			double minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),0);
 			
 			
+			if (nucs.get(i).data3D == null) {
+				nucs.get(i).data3D = new Hashtable<String, MutableDouble>(1);
+			}
 			
+			nucs.get(i).data3D.put("Thickness",new MutableDouble(minFeret));
+			nucs.get(i).data3D.put("Thickness Area", new MutableDouble(area));
+			
+			//IJ.log("minFeret = " + minFeret);
+			//double area = nucs.get(i).roi.getStatistics().area;
+			//double y = nucs.get(i).roi.getStatistics().yCentroid;
+			//IJ.log("" + y + "," + area + "," + minFeret);
 			
 			
 			
@@ -251,6 +342,8 @@ public class Cell {
 	
 	
 	
+	
+	
 	/** for the mo. just does nuclei channel and cell channel**/
 	public void makeCellXOrthView() {
 		//IJ.log("starting makeCellXOrthView"); 
@@ -263,8 +356,8 @@ public class Cell {
 		channels[0] = hemiseg.exper.channels.get("Cell");
 		channels[1] = hemiseg.exper.channels.get("Nuclei");
 		
-		IJ.log("xLength="+xLength+",yLength="+yLength+",zLength="+zLength);
-		IJ.log("channels="+channels);
+		//IJ.log("xLength="+xLength+",yLength="+yLength+",zLength="+zLength);
+		//IJ.log("channels="+channels);
 		ImageStack[] outStacks = new ImageStack[2];
 		//outStacks[0] = new ImageStack();
 		//outStacks[1] = new ImageStack();
@@ -294,12 +387,12 @@ public class Cell {
 			}
 			//ImagePlus temp = new ImagePlus();
 			//temp.setStack(sliceHolder);
-			IJ.log("sliceHolder.size()="+sliceHolder.size());
+			//IJ.log("sliceHolder.size()="+sliceHolder.size());
 			outStacks[index] = (sliceHolder.duplicate());
 			index++;
 			}
 		//IJ.log("outStacks"
-		IJ.log("outStacks[0].size()="+outStacks[0].size());
+		//IJ.log("outStacks[0].size()="+outStacks[0].size());
 		ImageStack outStack = RGBStackMerge.mergeStacks(outStacks[0],outStacks[1],null,true);
 		ImagePlus temp = new ImagePlus();
 		temp.setStack(outStack);
@@ -371,12 +464,12 @@ public class Cell {
 				//IJ.log("temp.setStack(...), " + temp);
 				//outImps[channel] = (temp.duplicate());
 				//IJ.log("outImps[...], " + outImps);
-				IJ.log("sliceHolder.size()="+sliceHolder.size());
-				IJ.log("sliceHolder = " + sliceHolder);
+				//IJ.log("sliceHolder.size()="+sliceHolder.size());
+				//IJ.log("sliceHolder = " + sliceHolder);
 				
 				
 				outStacks[channel] = (sliceHolder.duplicate());
-				IJ.log("outStacks["+channel+"] = " + outStacks[channel]);
+				//IJ.log("outStacks["+channel+"] = " + outStacks[channel]);
 			}
 			
 		//IJ.log("outStacks[0].size()="+outStacks[0].size());
@@ -389,8 +482,8 @@ public class Cell {
 			
 			
 		}
-		IJ.log("outStacks = " + outStacks);
-		IJ.log("outStacks.length = " + outStacks.length);
+		//IJ.log("outStacks = " + outStacks);
+		//IJ.log("outStacks.length = " + outStacks.length);
 		//if (outStacks.length > 0) {
 			//IJ.log("outStacks[0] = " + outStacks[0]);
 		//}

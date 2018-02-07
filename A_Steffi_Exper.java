@@ -3,7 +3,7 @@ import ij.plugin.PlugIn;
 import ij.*;
 import ij.io.*;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.io.File;
 
 import jsteffi.*;
@@ -38,7 +38,19 @@ public class A_Steffi_Exper implements PlugIn{
 		
 		
 		
+		for (Hemisegment hemiseg : exper.hemisegs) {
+			hemiseg.vl3.erm();
+			hemiseg.vl4.erm();
+		}
+		
+		ArrayList<String> geoHeadings = new ArrayList<String>(Arrays.asList("Y","Area"));
+		ArrayList<String> data3DHeadings = new ArrayList<String>(Arrays.asList("Thickness", "Thickness Area"));
+		exper.exportNucData("y-area-thickness", geoHeadings, data3DHeadings);
+		
+		
+		
 		//IJ.log("cool");
+		IJ.log("specCount = " + exper.specCount);
 	}
 	public void close() {
 		inst_count--;
