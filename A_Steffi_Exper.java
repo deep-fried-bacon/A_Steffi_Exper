@@ -30,7 +30,7 @@ public class A_Steffi_Exper implements PlugIn{
 		
 		Experiment exper = new Experiment();
 		//exper.hemisegs.get(0).hyp.show();
-		
+		IJ.log("py_path");
 		if(inst_count == 1) {
 			Opener myOpener = new Opener();
 			myOpener.open(py_path);	

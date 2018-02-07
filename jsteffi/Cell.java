@@ -211,14 +211,24 @@ public class Cell {
 		//int lastZ = hemiseg.getNSlices();
 		//int firstT = 1;
 		//int lastT = 1;
-		ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);
+		
+		
+		
+		
+		
+		
+		/** TEMPORARILY **/
+		try {
+			ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);
+		
 		
 		ResultsTable rt = new ResultsTable();
 		//for (Roi roi : nucRoiP) {
 			
 		for (int i = 0; i < nucs.size(); i++) {
 			nucStack.setRoi(nucRoiP.get(i));
-			ImagePlus sinNucStack = nucStack.duplicate();	//single nucleus stack
+			//ImagePlus sinNucStack = nucStack.duplicate();	//single nucleus stack
+			nucs.get(i).stack = nucStack.duplicate();	//single nucleus stack
 			/** I don't think I need to do nucChan.deleteRoi() until the end
 				because it'll be replaced by the next one, but I need to 
 				be on the look out **/
@@ -227,19 +237,24 @@ public class Cell {
 				
 			/** should make orthView version that takes which channels I want **/
 			
-			ImagePlus[] temp = orthView(sinNucStack,1,0);
-			ImagePlus nucOrthView = temp[0];
+			ImagePlus[] temp = orthView(nucs.get(i).stack,1,0);
+			//ImagePlus nucOrthView = temp[0];
+			nucs.get(i).orthStack = temp[0];
 			
-			ImagePlus nucOrthProjection = ZProjector.run(nucOrthView, "max");
+			
+			
+			//ImagePlus nucOrthProjection = ZProjector.run(nucs.get(i).orthStack, "max");
+			nucs.get(i).orth = ZProjector.run(nucs.get(i).orthStack, "max");
 			Auto_Threshold at = new Auto_Threshold();
-			Object[] temp2 = at.exec(nucOrthProjection,
+			Object[] temp2 = at.exec(nucs.get(i).orth,
 										"IsoData",false, false, true, false, false, false);
-			ImagePlus nucOrthThresh = (ImagePlus)temp2[1];
+			//ImagePlus nucOrthThresh = (ImagePlus)temp2[1];
+			nucs.get(i).orthThresh = (ImagePlus)temp2[1];
 			
 			
 			//ImageProcessor nucOrthThreshIp = nucOrthThresh.getProcessor();
-			nucOrthThresh.setCalibration(hemiseg.cal);
-			nucOrthThresh.setOverlay(null);
+			nucs.get(i).orthThresh.setCalibration(hemiseg.cal);
+			nucs.get(i).orthThresh.setOverlay(null);
 
 			rt.reset();
 			
@@ -247,9 +262,9 @@ public class Cell {
 			ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_OVERLAY_OUTLINES, msr, rt, 0, Double.POSITIVE_INFINITY);
 			
 			
-			pa.analyze(nucOrthThresh);
-			Overlay nucRoisH = nucOrthThresh.getOverlay();
-			nucOrthThresh.setOverlay(null);
+			pa.analyze(nucs.get(i).orthThresh);
+			Overlay nucRoisH = nucs.get(i).orthThresh.getOverlay();
+			nucs.get(i).orthThresh.setOverlay(null);
 
 				
 			/**gotta fix this, because this will happen, if for no other reason then vo nuclei**/
@@ -281,11 +296,15 @@ public class Cell {
 				}
 				
 				if (count == 1) {
-					minFeret = nucRoisH.get(index).getFeretValues()[2];
-					area = nucRoisH.get(index).getStatistics().area;
+					//minFeret = nucRoisH.get(index).getFeretValues()[2];
+					//area = nucRoisH.get(index).getStatistics().area;
 					//y = nucRoisH.get(index).getStatistics}().yCentroid;
+					
+					minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),index);
+					//y = rt.getValueAsDouble(rt.getColumnIndex("Y"),0);
+					area = rt.getValueAsDouble(rt.getColumnIndex("Area"),index);
 				} else {
-					nucOrthThresh.show();
+					//nucs.get(i).orthThresh.show();
 					//IJ.log("fuck, multiple particles for nuc orthview");
 					IJ.log(hemiseg.name + " vl"+vlNum);
 
@@ -298,7 +317,7 @@ public class Cell {
 					
 			} 
 			else if (nucRoisH.size() < 1) {
-				nucOrthThresh.show();
+				nucs.get(i).orthThresh.show();
 				IJ.log("fuck, no particles for nuc orthview");
 				continue;
 			}
@@ -319,7 +338,7 @@ public class Cell {
 			nucs.get(i).data3D.put("Thickness",new MutableDouble(minFeret));
 			nucs.get(i).data3D.put("Thickness Area", new MutableDouble(area));
 			
-			//IJ.log("minFeret = " + minFeret);
+			//IJ.log("" + minFeret);
 			//double area = nucs.get(i).roi.getStatistics().area;
 			//double y = nucs.get(i).roi.getStatistics().yCentroid;
 			//IJ.log("" + y + "," + area + "," + minFeret);
@@ -334,6 +353,13 @@ public class Cell {
 			//break;
 			
 			
+			
+		}
+		IJ.log("");
+		
+		}
+		catch (Exception e) {
+			IJ.log("exception in Cell.erm()");
 			
 		}
 		

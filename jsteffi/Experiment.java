@@ -51,7 +51,9 @@ public class Experiment {
 	public void makePath() {
 		String pathStr;
 		if (testing) {
-			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
+			//pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
+			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150910_Dm2-EGFP";
+
 		}
 		else {
 			DirectoryChooser dc = new DirectoryChooser("Choose folder containing hemisegment folders.");
