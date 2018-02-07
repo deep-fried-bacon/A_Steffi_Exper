@@ -13,10 +13,10 @@ import jsteffi.utilities.*;
 
 
 public class Hemisegment { 
-	public static int GEO = 159457; //without display label 158433
-	public static int INTENS = 1934366 ; //without display label 1933342
+	public static int GEO = 159457; 		/** without display label 158433 **/
+	public static int INTENS = 1934366 ; 	/** without display label 1933342 **/
 	
-	// SUF = suffix
+	/** SUF = suffix **/
 	public static String HYP_SUF = ".tif";
 	public static String NUC_BIN_SUF =  "_Nuc-bin.tif";
 	
@@ -51,7 +51,6 @@ public class Hemisegment {
 		name = path.getName();
 
 		loadFiles();
-
 	}
 	
 	public void loadFiles() {
@@ -84,9 +83,7 @@ public class Hemisegment {
 			if (vl4Csv != null) {
 				vl4 = new Cell(this, vl4Csv, 4, cal);
 			}
-			
 		}
-		
 	}
 	
 	public void loadNucs() {
@@ -136,33 +133,25 @@ public class Hemisegment {
 		}
 		nucBin.setOverlay(null);
 	}
-	
-	
-	
-	
-	/* 
-	public void makeNucIntensData() {
-		
-	} */
+
+	/** 
+		public void makeNucIntensData() {
+			
+		} 
+	**/
 	
 	public void makeCellDataPointers() {
 		vl3.makeNucDataPointers();
 		vl4.makeNucDataPointers();
 	}
 	
-	
-	
-	
 	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum) {
 		String[] headings = rt.getHeadings();
-	
 		int colCount = headings.length;
-		//IJ.log("rowNum = " + rowNum);
 		Hashtable<String,MutableDouble> row = new Hashtable<String,MutableDouble>(colCount);
+		
 		for (int i = 0; i < colCount; i++) {
-			
 			String heading = headings[i];
-			//IJ.log("heading = " + heading);
 			
 			int colIndex = rt.getColumnIndex(heading);
 			if (colIndex == ResultsTable.COLUMN_NOT_FOUND) {
@@ -185,10 +174,10 @@ public class Hemisegment {
 	public String buildFileName(String suffix) {
 		return (name + suffix);
 	}
+	
 	public File buildFile(String suffix) {
 		return new File(path, name + suffix);
 	}
-	
 	
 	public static int[] thing (double[] inputList) {
 		int begin = 0;
@@ -208,6 +197,7 @@ public class Hemisegment {
 		int[] be = {begin,end};
 		return be;
 	}
+	
 	public static int[] thing (long[] inputList) {
 		int begin = 0;
 		long i = inputList[begin];

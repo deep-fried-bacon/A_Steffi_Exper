@@ -11,8 +11,6 @@ import jsteffi.utilities.*;
 
 
 public class Nucleus {
-	
-	
 	public int id;
 	public Roi roi;
 	
@@ -21,15 +19,10 @@ public class Nucleus {
 	
 	public Hashtable<String, MutableDouble> data3D = null;
 	
-	
-	
-	public ImagePlus stack;
-	public ImagePlus orthStack;
-	//public ImagePlus orthProjection;
-	public ImagePlus orth;
-	public ImagePlus orthThresh;
-	
-	
+	public ImagePlus stack = null;
+	public ImagePlus orthStack = null;
+	public ImagePlus orth = null;
+	public ImagePlus orthThresh = null;
 	
 	
 	public Nucleus (int id, Roi roi, Hashtable<String, MutableDouble> geoData) {

@@ -12,7 +12,6 @@ import java.nio.charset.Charset;
 public class Experiment {
 	public static ArrayList<Experiment> insts = new ArrayList<Experiment>();
 	public static boolean testing = true;
-	//public static DEFAULT
 	
 	public File path;
 	
@@ -34,8 +33,8 @@ public class Experiment {
 	public Experiment() {
 		insts.add(this);
 		
-		makePath();		// instantiates path
-		//experView = new ExperimentView(this);
+		makePath();		
+		/** experView = new ExperimentView(this) **/
 		
 		loadChannels();
 
@@ -51,7 +50,9 @@ public class Experiment {
 	public void makePath() {
 		String pathStr;
 		if (testing) {
-			//pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
+			/** 
+				pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
+			**/
 			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150910_Dm2-EGFP";
 
 		}
@@ -97,8 +98,6 @@ public class Experiment {
 			IJ.log("couldn't open metadata.py");
 			
 		}
-		//String[] temp = new String
-		//String[] chanStrA = chanStrL.toArray(String[]);
 		channels = new Hashtable<String, Integer>();
 		boolean go = false; 
 		for(int i = 0; i < chanStrL.size(); i++) {
@@ -113,8 +112,6 @@ public class Experiment {
 					k = k.replaceAll("\"","\t");
 					k = k.replaceAll(",","\t");
 					k = k.trim();
-					//char[] chs = tempL[1].toCharArray();
-					//boolean keep = False
 					channels.put(k,v);
 				}
 			}			
@@ -122,19 +119,16 @@ public class Experiment {
 				go = true;
 			}
 		}
-	
 	}
 	
 	public void createHemisegs() {
 		hemisegFileList = new ArrayList<File>();
 		hemisegs = new ArrayList<Hemisegment>();
 		File[] subDirs = path.listFiles();
+		
 		for(int i = 0; i < subDirs.length; i++) {
-			
-		//IJ.log(subDirs[i].getName() + " - " + subDirs[
 			if (subDirs[i].getName().startsWith(name) && subDirs[i].isDirectory()) {
 				hemisegFileList.add(subDirs[i]);
-				
 				hemisegs.add(new Hemisegment(this, subDirs[i]));
 			}	
 		}
@@ -153,24 +147,18 @@ public class Experiment {
 		
 		if String FileSuf == null?
 	**/
- 	// public void exportNucData(String FileSuf, ArrayList<String> geoHeadings, ArrayList<String> intensHeadings, ArrayList<String> data3DHeadings){
-		// make default outputDir and outputFileName
-		// exportNucData(headings, outputDir, outputFileName);
-	// }
-	
-	
-	
-		/** for now only dealing data3D and geo **/
+ 	
+		/** for now only dealing with data3D and geo, not intens **/
 	public boolean exportNucData(String FileSuf, ArrayList<String> geoHeadings, /** ArrayList<String> intensHeadings,**/ ArrayList<String> data3DHeadings){
 		IJ.log("geoHeadings = " + geoHeadings);
 		IJ.log("data3DHeadings = " + data3DHeadings);
-		
 		File outCsv = new File(path, name + "_" + FileSuf + ".csv");
 		BufferedWriter writer = null;
+		
 		try {
 			writer = new BufferedWriter(new FileWriter(outCsv));
-			
 			String headings = "Hemisegment,Cell,NucID,";
+			
 			for (String heading : geoHeadings) {
 				headings += (heading + ",");
 			}
@@ -179,6 +167,7 @@ public class Experiment {
 			}
 			
 			writer.write(headings);
+			
 			for (Hemisegment hemiseg : hemisegs) {
 				
 				for (Nucleus nuc : hemiseg.vl3.nucs) {
@@ -200,11 +189,8 @@ public class Experiment {
 						}
 					}
 					writer.write(temp);
-
 				}
 				writer.newLine();
-				
-				
 				
 				for (Nucleus nuc : hemiseg.vl4.nucs) {
 					writer.newLine();
@@ -223,16 +209,9 @@ public class Experiment {
 						}
 					}
 					writer.write(temp);
-
 				}
 				writer.newLine();
-				
-				
-				
-
 			}
-			
-			
 			writer.close();
 			return true;
 		}
@@ -246,21 +225,5 @@ public class Experiment {
 			IJ.log("IOException in Experiment.exportNucData");
 			return false;
 		}
-		
-		
-
 	}
-		// make default outputDir and outputFileName
-		// exportNucData(headings, outputDir, outputFileName);
-	
-	
-	
-	
-	
-	
-	
-	/*
-	public void exportNucData(ArrayList<String> headings, File outputDir, String ouptutFileName){
-		
-	}	 */
 }
