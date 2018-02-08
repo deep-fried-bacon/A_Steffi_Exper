@@ -18,7 +18,7 @@ import jsteffi.utilities.*;
 
 public class Cell {
 	public Hemisegment hemiseg;
-	public int vlNum;
+	public int vlNum = -1;
 	
 	public File roiPath;
 	public Roi roi;
@@ -29,7 +29,7 @@ public class Cell {
 	public boolean nucsLoaded = false;
 
 	public ArrayList<Nucleus> nucs = new ArrayList<Nucleus>();
-	public int nucCount;
+	public int nucCount = -1;
 	
 	
 	/** 
@@ -137,10 +137,7 @@ public class Cell {
 		}
 		return true;
 	}
-	
-	
-	//public static
-	
+
 	
 	/** <edit when less tired> **/
 	public void makeCellHyp() {
@@ -165,17 +162,18 @@ public class Cell {
 		zLength = cellHyp.getDimensions()[3];
 	}
 	
-	/** def got to rename **/
-	public void erm() {
-		int specCount = 0;
+	public void orthMsrments() {
+		//int specCount = 0;
 		
 		/** requires cellHyp **/
 		Duplicator d = new Duplicator();
 		int nucChan = hemiseg.exper.channels.get("Nuclei");
 			
 		/** TEMPORARILY **/
-		try {
-			ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);		
+		//try {
+			ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);	
+
+			
 			ResultsTable rt = new ResultsTable();
 				
 			for (int i = 0; i < nucs.size(); i++) {
@@ -185,8 +183,24 @@ public class Cell {
 				ImagePlus[] temp = orthView(nucs.get(i).stack,1,0);
 				nucs.get(i).orthStack = temp[0];
 				
+				ZProjector zp = new ZProjector();
+				nucs.get(i).orth = zp.run(nucs.get(i).orthStack,"max");
+				
+				//IJ.log(
+				// IJ.log("Before: Auto_Threshold at = new Auto_Threshold()");
+
 				Auto_Threshold at = new Auto_Threshold();
+				
+				// IJ.log("After: Auto_Threshold at = new Auto_Threshold()");
+				// IJ.log("Before: Object[] temp2 = at.exec(nucs.get(i).orth, \"IsoData\", false, false, true, false, false, false)");
+				
 				Object[] temp2 = at.exec(nucs.get(i).orth, "IsoData", false, false, true, false, false, false);
+				
+				//IJ.log("After: Object[] temp2 = at.exec(nucs.get(i).orth, \"IsoData\", false, false, true, false, false, false)");
+				//IJ.log("temp2 = " + temp2);
+				// IJ.log("temp2.length = " + temp2.length);
+				// IJ.log("temp2[0]" + temp2[0]);
+				// IJ.log("temp2[1]" + temp2[1]);
 				nucs.get(i).orthThresh = (ImagePlus)temp2[1];
 				
 				nucs.get(i).orthThresh.setCalibration(hemiseg.cal);
@@ -206,10 +220,11 @@ public class Cell {
 			
 				double minFeret;
 				double area;
+				int index = 0;
+
 				if (nucRoisH.size() > 1) {
 					/** exception or something **/
 					int count = 0;
-					int index = -1;
 					for (int j = 0; j < nucRoisH.size(); j++) {
 						if (nucRoisH.get(j).getStatistics().area > 75) {
 							count++;
@@ -217,6 +232,28 @@ public class Cell {
 						}
 					}
 					
+					
+					
+					
+					if (count > 1) {
+						IJ.log(hemiseg.name + " vl"+vlNum);
+
+						for (int j = 0; j < nucRoisH.size(); j++) {
+							IJ.log("    \t" + nucRoisH.get(j).getStatistics().area);
+						}
+						hemiseg.exper.specCount2++;
+						continue;
+					}
+					
+					else if (count < 1) {
+						//nucs.get(i).orthThresh.show();
+						IJ.log("all particles too small");
+						for (int j = 0; j < nucRoisH.size(); j++) {
+							IJ.log("    \t" + nucRoisH.get(j).getStatistics().area);
+						}
+						continue;
+					}
+					/*
 					if (count == 1) {				
 						minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),index);
 						area = rt.getValueAsDouble(rt.getColumnIndex("Area"),index);
@@ -230,29 +267,33 @@ public class Cell {
 						hemiseg.exper.specCount++;
 						continue;
 					}
+					*/
 				} 
 				else if (nucRoisH.size() < 1) {
 					nucs.get(i).orthThresh.show();
 					IJ.log("fuck, no particles for nuc orthview");
 					continue;
 				}					
-				else {
-					minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),0);
-					area = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
-				}	
+				
+				hemiseg.exper.specCount++;
+
+				minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),0);
+				area = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
+				nucs.get(i).orthRoi = nucRoisH.get(index);
+					
 
 				if (nucs.get(i).data3D == null) {
 					nucs.get(i).data3D = new Hashtable<String, MutableDouble>(1);
 				}
 				
 				nucs.get(i).data3D.put("Thickness",new MutableDouble(minFeret));
-				nucs.get(i).data3D.put("Thickness Area", new MutableDouble(area));;		
+				nucs.get(i).data3D.put("Orth Area", new MutableDouble(area));;		
 			}
-		}
-		catch (Exception e) {
+		//}
+		//catch (Exception e) {
 			/** exception **/
-			IJ.log("exception in Cell.erm()");
-		}
+			//IJ.log("exception in Cell.orthMsrments()");
+		//}
 	}
 	
 	/** for the mo. just does nuclei channel and cell channel**/
@@ -366,6 +407,10 @@ public class Cell {
 	/** </edit when less tired> **/
 
 	
+	
+	
+	
+	
 	public boolean countNucPixels() {
 		if (nucs.get(0).stack == null) {
 			return false;
@@ -400,9 +445,6 @@ public class Cell {
 		return false;
 	}
 	
-	
-	
-	
 	/*** ArrayList<double> to float[] ***/
 	public float[] ArrLisDouToArrFlo(ArrayList<Double> arrLis) {
 		float[] f = new float[arrLis.size()];
@@ -411,7 +453,87 @@ public class Cell {
 		}
 		return f;
 	}
+	
+	
+	
+	
+	
+	
+	public String toString() {
+		return ("jsteffi.Cell: " + hemiseg.name + " vl" + vlNum);
+	}
+		
+	public String toStringLong() {
+		
+		String has = "\nHas: ";
+		String doesntHave = "\nDoesn't Have: ";
+		
+		if (hemiseg == null) doesntHave += "hemiseg, ";
+		else has += "hemiseg, ";
+		if (vlNum == -1) doesntHave += "vlNum, ";
+		else has += "vlNum, ";
+		
+		if (roiPath == null) doesntHave += "roiPath, ";
+		else has += "roiPath, ";
+		if (roi == null) doesntHave += "roi, ";
+		else has += "roi, ";
+		
+		if (roiX == null) doesntHave += "roiX, ";
+		else has += "roiX, ";
+		if (roiY == null) doesntHave += "roiY, ";
+		else has += "roiY, ";
+		
+		//if (nucsLoaded == null) doesntHave += "nucsLoaded, ";
+		//else has += "nucsLoaded, ";
+		
+		if (nucs == null) doesntHave += "nucs, ";
+		else has += "nucs, ";
+		if (nucCount == -1) doesntHave += "nucCount, ";
+		else has += "nucCount, ";
+		
+		
+		
+		
+		
+		
+		
+		
+		has = has.substring(0, has.length() - 4);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		
+		return (this.toString()
+				+ has
+				+ doesntHave);		
+	}
+	
+	public String fullSummary() {
+		String temp = this.toString();
+		
+		temp += ("\nhemiseg: " + hemiseg);
+		temp += ("\nvlNum: " + vlNum);
+		
+		temp += ("\nroiPath: " + roiPath);
+		temp += ("\nroi: " + roi);
+		
+		temp += ("\nroiX: " + roiX);
+		temp += ("\nroiY: " + roiY);
+		
+		temp += ("\nnucsLoaded: " + nucsLoaded);
+		
+		temp += ("\nnucs: " + nucs);
+		temp += ("\nnucCount: " + nucCount);
+		
+		
+		
+		
+		return temp;
+	}
 }
+
+
+
+
+
 
 
 

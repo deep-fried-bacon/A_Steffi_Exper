@@ -28,6 +28,7 @@ public class Experiment {
 	
 	
 	public int specCount = 0;
+	public int specCount2 = 0;
 	
 	
 	public Experiment() {
@@ -51,9 +52,9 @@ public class Experiment {
 		String pathStr;
 		if (testing) {
 			/** 
-				pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
-			**/
 			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150910_Dm2-EGFP";
+			**/
+				pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
 
 		}
 		else {
@@ -180,7 +181,7 @@ public class Experiment {
 					
 					for (String heading : data3DHeadings) {
 						if (nuc.data3D == null) {
-							IJ.log(temp);
+							//IJ.log(temp);
 							temp += "*,";
 
 						}
@@ -201,7 +202,7 @@ public class Experiment {
 					}
 					for (String heading : data3DHeadings) {
 						if (nuc.data3D == null) {
-							IJ.log(temp);
+							//IJ.log(temp);
 							temp += "*,";
 						}
 						else {
@@ -213,6 +214,8 @@ public class Experiment {
 				writer.newLine();
 			}
 			writer.close();
+			IJ.log("specCount" + specCount);
+			IJ.log("specCount2" + specCount2);
 			return true;
 		}
 		catch (FileNotFoundException e) {
@@ -225,5 +228,67 @@ public class Experiment {
 			IJ.log("IOException in Experiment.exportNucData");
 			return false;
 		}
+	}
+	
+	
+	public String toString() {
+		return ("jsteffi.Experiment: " + name);
+	}
+	
+	
+	public String toStringLong() {
+		
+		String has = "\nHas: ";
+		String doesntHave = "\nDoesn't Have: ";
+		
+		if (path == null) doesntHave += "path, ";
+		else has += "path, ";
+		
+		if (name == null) doesntHave += "name, ";
+		else has += "name, ";
+		if (date == null) doesntHave += "date, ";
+		else has += "date, ";
+		if (genotype == null) doesntHave += "genotype, ";
+		else has += "genotype, ";
+		
+		if (experView == null) doesntHave += "experView, ";
+		else has += "experView, ";
+		
+		if (channels == null) doesntHave += "channels, ";
+		else has += "channels, ";
+		
+		if (hemisegFileList == null) doesntHave += "hemisegFileList, ";
+		else has += "hemisegFileList, ";
+		if (hemisegs == null) doesntHave += "hemisegs, ";
+		else has += "hemisegs, ";
+		
+		
+		
+		
+		has = has.substring(0, has.length() - 4);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		
+		return (this.toString()
+				+ has
+				+ doesntHave);			
+	}
+	
+	public String fullSummary() {
+		String temp = this.toString();
+		
+		temp += ("\npath: " + path);
+		
+		temp += ("\nname: " + name);
+		temp += ("\ndate: " + date);
+		temp += ("\ngenotype: " + genotype);
+		
+		temp += ("\nexperView: " + experView);
+		
+		temp += ("\nchannels: " + channels);
+		
+		temp += ("\nhemisegFileList: " + hemisegFileList);
+		temp += ("\nhemisegs: " + hemisegs);
+		
+		return temp;
 	}
 }

@@ -35,7 +35,7 @@ public class Hemisegment {
 
 	public ImagePlus hyp = null;
 	public Calibration cal = null;
-	public int sliceCount;
+	public int sliceCount = -1;
 
 	public ImagePlus nucBin = null;
 	
@@ -111,11 +111,11 @@ public class Hemisegment {
 			int nucRoiY = (int)nucRoi.getContourCentroid()[1];
 
 			if (vl3 != null && vl3.roi.contains(nucRoiX,nucRoiY)) {
-				vl3.nucs.add(new Nucleus(vl3NucCount, nucRoi, nucRow));
+				vl3.nucs.add(new Nucleus(vl3, vl3NucCount, nucRoi, nucRow));
 				vl3NucCount++;
 			}
 			else if (vl4 != null && vl4.roi.contains(nucRoiX,nucRoiY)) {
-				vl4.nucs.add(new Nucleus(vl4NucCount, nucRoi, nucRow));
+				vl4.nucs.add(new Nucleus(vl4, vl4NucCount, nucRoi, nucRow));
 				vl4NucCount++;
 			}
 			else {
@@ -217,6 +217,96 @@ public class Hemisegment {
 		return be;
 	}
 	
+	
+	
+	
+	
+	
+	public String toString() {
+		return ("jsteffi.Hemisegment: " + name);
+	}
+		
+	public String toStringLong() {
+		
+		String has = "\nHas: ";
+		String doesntHave = "\nDoesn't Have: ";
+		
+		if (exper == null) doesntHave += "exper, ";
+		else has += "exper, ";
+		
+		if (path == null) doesntHave += "path, ";
+		else has += "path, ";
+		if (name == null) doesntHave += "name, ";
+		else has += "name, ";
+		if (fileList == null) doesntHave += "fileList, ";
+		else has += "fileList, ";
+		
+		if (rt == null) doesntHave += "rt, ";
+		else has += "rt, ";
+		if (geoHeadings == null) doesntHave += "geoHeadings, ";
+		else has += "geoHeadings, ";
+		
+		if (hyp == null) doesntHave += "hyp, ";
+		else has += "hyp, ";
+		if (cal == null) doesntHave += "cal, ";
+		else has += "cal, ";
+		if (sliceCount == -1) doesntHave += "sliceCount, ";
+		else has += "sliceCount, ";
+		
+		if (nucBin == null) doesntHave += "nucBin, ";
+		else has += "nucBin, ";
+		
+		if (vl3Csv == null) doesntHave += "vl3Csv, ";
+		else has += "vl3Csv, ";
+		if (vl4Csv == null) doesntHave += "vl4Csv, ";
+		else has += "vl4Csv, ";
+		
+		if (vl3 == null) doesntHave += "vl3, ";
+		else has += "vl3, ";
+		if (vl4 == null) doesntHave += "vl4, ";
+		else has += "vl4, ";
+		
+		
+		
+		
+		
+		
+		has = has.substring(0, has.length() - 4);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		
+		return (this.toString() 
+				+ has
+				+ doesntHave);		
+	}
+	
+	public String fullSummary() {
+		String temp = this.toString();
+		
+		temp += ("\nexper: " + exper);
+
+		temp += ("\npath: " + path);
+		temp += ("\nname: " + name);
+		temp += ("\nfileList: " + fileList);
+		
+		temp += ("\nrt: " + rt);
+		temp += ("\ngeoHeadings: " + geoHeadings);
+		
+		temp += ("\nhyp: " + hyp);
+		temp += ("\ncal: " + cal);
+		temp += ("\nsliceCount: " + sliceCount);
+		
+		temp += ("\nnucBin: " + nucBin);
+		
+		temp += ("\nvl3Csv: " + vl3Csv);
+		temp += ("\nvl4Csv: " + vl4Csv);
+		
+		temp += ("\nvl3: " + vl3);
+		temp += ("\nvl4: " + vl4);
+		
+		
+		
+		return temp;
+	}
 }
 
 
