@@ -26,6 +26,10 @@ public class Nucleus {
 	public ImagePlus orth = null;
 	public ImagePlus orthThresh = null;
 	
+	public ImagePlus croppedOrthStack = null;
+	
+	
+	
 	public Roi orthRoi = null;
 	
 	public double chunkX = -1;
@@ -119,6 +123,38 @@ public class Nucleus {
 			return true;
 		}
 	}
+	
+	
+	public ImagePlus getCroppedOrthStack() {
+		return croppedOrthStack;
+	}
+	public boolean setCroppedOrthStack(ImagePlus croppedOrthStack) {
+		if (croppedOrthStack == null) return false;
+		//if (!(croppedOrthStack.getHeight() == chunkZ)) return false;
+		else {
+			if (chunkX == -1) chunkX = croppedOrthStack.getNSlices();
+			else if (!(croppedOrthStack.getNSlices() == chunkX)) return false;
+			
+			if (chunkY == -1) chunkY = croppedOrthStack.getWidth();
+			else if (!(croppedOrthStack.getWidth() == chunkY)) return false;
+			
+			
+			this.croppedOrthStack = croppedOrthStack;
+			return true;
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	public String fullId() {

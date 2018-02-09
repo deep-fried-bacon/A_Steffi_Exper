@@ -171,8 +171,15 @@ public class Cell {
 			
 		/** TEMPORARILY **/
 		//try {
-			ImagePlus nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);	
+			ImagePlus nucStack;
+			if (nucChan > hemiseg.hyp.getNChannels()) {
+				IJ.log("nucChan issue in orthMsrments, cell: " + this);
+				nucStack = d.run(hemiseg.hyp, 1, 1, 1, hemiseg.hyp.getNSlices(), 1, 1);	
 
+			}
+			else {
+				nucStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);	
+			}
 			
 			ResultsTable rt = new ResultsTable();
 				
@@ -208,7 +215,7 @@ public class Cell {
 
 				rt.reset();
 				
-				int msr = Measurements.FERET + Measurements.AREA + Measurements.CENTROID;
+				int msr = Measurements.FERET + Measurements.AREA + Measurements.CENTROID + Measurements.RECT;
 				ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_OVERLAY_OUTLINES, msr, rt, 0, Double.POSITIVE_INFINITY);
 				
 				pa.analyze(nucs.get(i).orthThresh);
@@ -218,8 +225,8 @@ public class Cell {
 				/**gotta fix this, because this will happen, if for no other reason then vo nuclei**/
 				/**also should consider despeckle**/
 			
-				double minFeret;
-				double area;
+				//double minFeret;
+				//double area;
 				int index = 0;
 
 				if (nucRoisH.size() > 1) {
@@ -277,17 +284,22 @@ public class Cell {
 				
 				hemiseg.exper.specCount++;
 
-				minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),0);
-				area = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
-				nucs.get(i).orthRoi = nucRoisH.get(index);
+				double minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),index);
+				double area = rt.getValueAsDouble(rt.getColumnIndex("Area"),index);
+				double height = rt.getValueAsDouble(rt.getColumnIndex("Height"), index);
 					
+					
+				nucs.get(i).orthRoi = nucRoisH.get(index);
+
 
 				if (nucs.get(i).data3D == null) {
 					nucs.get(i).data3D = new Hashtable<String, MutableDouble>(1);
 				}
 				
-				nucs.get(i).data3D.put("Thickness",new MutableDouble(minFeret));
-				nucs.get(i).data3D.put("Orth Area", new MutableDouble(area));;		
+				nucs.get(i).data3D.put("Thickness from MinFeret",new MutableDouble(minFeret));
+				nucs.get(i).data3D.put("Thickness from Height",new MutableDouble());
+				nucs.get(i).data3D.put("Orth Area", new MutableDouble(area));;	
+				
 			}
 		//}
 		//catch (Exception e) {
@@ -417,9 +429,55 @@ public class Cell {
 		}
 		for (int nucID = 0; nucID < nucCount; nucID++) {
 			//if nucID
-			if (nucs.get(nucID).stack != null) {
+			//if (nucs.get(nucID).stack != null) {
 				
+			//}
+			Nucleus nuc = nucs.get(nucID);
+			
+			nuc.orthStack.setRoi(nuc.orthRoi);
+			nuc.setCroppedOrthStack(nuc.orthStack.crop());
+			nuc.orthStack.deleteRoi();
+			int pixelCount = 0;
+			int pixelSum = 0;
+
+			
+			for (int slice = 0; slice < nuc.chunkX; slice++) {
+				
+				ImageProcessor ip = nuc.croppedOrthStack.getProcessor();
+				
+				int width = ip.getWidth();
+				int height = ip.getHeight();	
+				
+				byte[] pix = (byte[])ip.getPixels();
+				
+				for (int i = 0; i < pix.length; i++) {
+					int temp = pix[i]&0xff;
+					if (temp > 0){
+						pixelCount++;
+						pixelSum += temp;
+					}
+					else if (temp < 0) {
+						IJ.log("fuck");
+					}
+				}	
+		
 			}
+			
+			if (nuc.data3D == null) nuc.data3D = new Hashtable<String,MutableDouble>();
+			nuc.data3D.put("vol pix count", new MutableDouble((double)pixelCount));
+			nuc.data3D.put("vol pix sum", new MutableDouble((double)pixelSum));
+				
+			/* for (int h = 0; h < height; h++) {
+				String temp = "";
+				for (int w = 0; w < width; w++) {
+					double temp2 =(pix[h*width + w]&0xff);
+					if (!(temp2 == 0)) temp += IJ.d2s(temp2,3,3) + ", ";
+					else temp += "00.0, ";
+				}
+				IJ.log(temp);
+			} */
+			
+			
 		}
 		
 		

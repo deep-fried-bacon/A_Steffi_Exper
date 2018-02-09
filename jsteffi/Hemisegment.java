@@ -49,6 +49,7 @@ public class Hemisegment {
 		this.exper = exper;
 		this.path = hsPath;
 		name = path.getName();
+		IJ.log("starting hemiseg:" + name);
 
 		loadFiles();
 	}

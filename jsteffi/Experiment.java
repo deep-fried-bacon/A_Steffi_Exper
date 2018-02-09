@@ -52,9 +52,15 @@ public class Experiment {
 		String pathStr;
 		if (testing) {
 			/** 
+			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
 			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150910_Dm2-EGFP";
+			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151021_Dm2-GFPRNAi";
+			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151216_Dm2-GFP";
+
+			
+			
 			**/
-				pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
+			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151216_Dm2-GFP";
 
 		}
 		else {
@@ -151,8 +157,8 @@ public class Experiment {
  	
 		/** for now only dealing with data3D and geo, not intens **/
 	public boolean exportNucData(String FileSuf, ArrayList<String> geoHeadings, /** ArrayList<String> intensHeadings,**/ ArrayList<String> data3DHeadings){
-		IJ.log("geoHeadings = " + geoHeadings);
-		IJ.log("data3DHeadings = " + data3DHeadings);
+		//IJ.log("geoHeadings = " + geoHeadings);
+		//IJ.log("data3DHeadings = " + data3DHeadings);
 		File outCsv = new File(path, name + "_" + FileSuf + ".csv");
 		BufferedWriter writer = null;
 		
