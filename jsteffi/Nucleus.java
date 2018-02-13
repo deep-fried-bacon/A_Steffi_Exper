@@ -16,59 +16,76 @@ public class Nucleus {
 	public Roi roi;
 	public Hashtable<String, MutableDouble> geoData;
 	
-	
 	public Hashtable<String, MutableDouble[]> intensData;
 		
 	public Hashtable<String, MutableDouble> data3D = null;
 	
-	public ImagePlus stack = null;
-	public ImagePlus orthStack = null;
-	public ImagePlus orth = null;
-	public ImagePlus orthThresh = null;
-	
-	public ImagePlus croppedOrthStack = null;
-	
-	
-	
+	private ImagePlus stack = null;
+	private ImagePlus orthStack = null;
+	private ImagePlus orth = null;
+	private ImagePlus orthThresh = null;
+	private ImagePlus croppedOrthStack = null;
+		
 	public Roi orthRoi = null;
 	
 	public double chunkX = -1;
 	public double chunkY = -1;
 	public double chunkZ = -1;
 	
+	public double xCal = -1;
+	public double yCal = -1;
+	public double zCal = -1;
+
 	
 	public Nucleus (Cell cell, int id, Roi roi, Hashtable<String, MutableDouble> geoData) {
 		if (cell == null || roi == null || geoData == null) {
-			//throw Exception;
-			/** exception **/
+			 throw new NullPointerException();
 		}
 		else {
 			this.cell = cell;
 			this.chunkZ = cell.hemiseg.sliceCount;
+			
+			this.xCal = cell.hemiseg.cal.pixelWidth;
+			this.yCal = cell.hemiseg.cal.pixelHeight;
+			this.zCal = cell.hemiseg.cal.pixelDepth;
+			
+			
 			this.id = id;
 			this.roi = roi;
 			this.geoData = geoData;		
 		}
 	}
 	
-	
-	
-	
 	public ImagePlus getStack() {
 		return stack;
 	}
 	public boolean setStack(ImagePlus stack) {
-		if (stack == null) return false;
-		if (!(stack.getNChannels() == chunkZ)) return false;
+		if (stack == null) {
+			//IJ.log("null");
+			return false;
+		}
+		if (!(stack.getNSlices() == chunkZ)) {
+			//IJ.log("chunkZ = " +  chunkZ);
+			//IJ.log("stack.getNChannels() = " +  stack.getNChannels());
+			return false;
+		}
 		else {
 			if (chunkX == -1) chunkX = stack.getWidth();
-			else if (!(stack.getWidth() == chunkX)) return false;
+			else if (!(stack.getWidth() == chunkX)) {
+				//IJ.log("ChunkX");
+				return false;
+			}
 			
 			if (chunkY == -1) chunkY = stack.getHeight();
-			else if (!(stack.getWidth() == chunkY)) return false;
+			else if (!(stack.getWidth() == chunkY)) {
+				//IJ.log("ChunkY");
+				return false;
+			}
 			
 			
 			this.stack = stack;
+			this.stack.setCalibration(cell.hemiseg.cal);
+			
 			return true;
 		}
 	}
@@ -88,6 +105,12 @@ public class Nucleus {
 			
 			
 			this.orthStack = orthStack;
+			this.orthStack.setCalibration(cell.hemiseg.cal.copy());
+			
+			this.orthStack.getCalibration().pixelWidth = yCal;
+			this.orthStack.getCalibration().pixelHeight = zCal;
+			this.orthStack.getCalibration().pixelDepth = xCal;
+			
 			return true;
 		}
 	}
@@ -104,6 +127,11 @@ public class Nucleus {
 			
 			
 			this.orth = orth;
+			this.orth.setCalibration(cell.hemiseg.cal.copy());
+			
+			this.orth.getCalibration().pixelWidth = yCal;
+			this.orth.getCalibration().pixelHeight = zCal;
+			this.orth.getCalibration().pixelDepth = xCal;
 			return true;
 		}
 	}
@@ -120,47 +148,54 @@ public class Nucleus {
 			
 			
 			this.orthThresh = orthThresh;
+			
+			this.orth.setCalibration(cell.hemiseg.cal.copy());
+			
+			this.orthThresh.getCalibration().pixelWidth = yCal;
+			this.orthThresh.getCalibration().pixelHeight = zCal;
+			this.orthThresh.getCalibration().pixelDepth = xCal;
 			return true;
 		}
 	}
-	
 	
 	public ImagePlus getCroppedOrthStack() {
 		return croppedOrthStack;
 	}
 	public boolean setCroppedOrthStack(ImagePlus croppedOrthStack) {
 		if (croppedOrthStack == null) return false;
-		//if (!(croppedOrthStack.getHeight() == chunkZ)) return false;
 		else {
 			if (chunkX == -1) chunkX = croppedOrthStack.getNSlices();
-			else if (!(croppedOrthStack.getNSlices() == chunkX)) return false;
+			else if (!(croppedOrthStack.getNSlices() == chunkX)) {
+				//IJ.log("nSlices = " + croppedOrthStack.getNSlices());
+				//IJ.log("chunkX = " + chunkX);
+
+				return false;
+			}
 			
-			if (chunkY == -1) chunkY = croppedOrthStack.getWidth();
-			else if (!(croppedOrthStack.getWidth() == chunkY)) return false;
-			
+			/* if (chunkY == -1) chunkY = croppedOrthStack.getWidth();
+			else if (!(croppedOrthStack.getWidth() == chunkY)) {
+				IJ.log("width = " + croppedOrthStack.getWidth());
+				IJ.log("chunkY = " + chunkY);
+				cropped
+				return false;
+			} */
 			
 			this.croppedOrthStack = croppedOrthStack;
+			
+			this.croppedOrthStack.setCalibration(cell.hemiseg.cal.copy());
+			
+			this.croppedOrthStack.getCalibration().pixelWidth = yCal;
+			this.croppedOrthStack.getCalibration().pixelHeight = zCal;
+			this.croppedOrthStack.getCalibration().pixelDepth = xCal;
+			
+			
 			return true;
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	public String fullId() {
 		return ("Hemisegment " + cell.hemiseg.name + " vl" + cell.vlNum + " Nuc " + id);
 	}
-	
 	
 	public String toString() {
 		return ("jsteffi.Nucleus: " + fullId());
@@ -210,7 +245,6 @@ public class Nucleus {
 				+ doesntHave);
 	}
 		
-	
 	public String fullSummary(boolean dataTables) {
 		String temp = this.toString();
 		temp += ("\nroi: " + roi);
@@ -239,6 +273,4 @@ public class Nucleus {
 		return temp;
 	}
 		
-	
-	
 }

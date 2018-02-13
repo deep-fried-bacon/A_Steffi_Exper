@@ -11,7 +11,6 @@ import java.nio.charset.Charset;
 
 public class Experiment {
 	public static ArrayList<Experiment> insts = new ArrayList<Experiment>();
-	public static boolean testing = true;
 	
 	public File path;
 	
@@ -31,12 +30,15 @@ public class Experiment {
 	public int specCount2 = 0;
 	
 	
-	public Experiment() {
+	public Experiment(File path) {
 		insts.add(this);
 		
-		makePath();		
+		//makePath();		
+		this.path = path;
 		/** experView = new ExperimentView(this) **/
 		
+		parseName();
+
 		loadChannels();
 
 		createHemisegs();
@@ -46,29 +48,6 @@ public class Experiment {
 	
 	public void close() {
 		insts.remove(insts.indexOf(this));
-	}
-	
-	public void makePath() {
-		String pathStr;
-		if (testing) {
-			/** 
-			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118";
-			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150910_Dm2-EGFP";
-			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151021_Dm2-GFPRNAi";
-			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151216_Dm2-GFP";
-
-			
-			
-			**/
-			pathStr = "C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151216_Dm2-GFP";
-
-		}
-		else {
-			DirectoryChooser dc = new DirectoryChooser("Choose folder containing hemisegment folders.");
-			pathStr = dc.getDirectory();
-		}
-		path = new File(pathStr);
-		parseName();
 	}
 	
 	public void parseName() {
@@ -144,10 +123,8 @@ public class Experiment {
 	public void loadNucs() {
 		for (Hemisegment h : hemisegs) {
 			h.loadNucs();
-			h.makeCellDataPointers();
 		}
 	}
-	
 	
 	/** give null ArrayLists if you don't 
 		want any data printed from that set of data 
@@ -156,10 +133,10 @@ public class Experiment {
 	**/
  	
 		/** for now only dealing with data3D and geo, not intens **/
-	public boolean exportNucData(String FileSuf, ArrayList<String> geoHeadings, /** ArrayList<String> intensHeadings,**/ ArrayList<String> data3DHeadings){
+	public boolean exportNucData(String fileSuf, ArrayList<String> geoHeadings, /** ArrayList<String> intensHeadings,**/ ArrayList<String> data3DHeadings){
 		//IJ.log("geoHeadings = " + geoHeadings);
 		//IJ.log("data3DHeadings = " + data3DHeadings);
-		File outCsv = new File(path, name + "_" + FileSuf + ".csv");
+		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
 		BufferedWriter writer = null;
 		
 		try {
@@ -240,7 +217,6 @@ public class Experiment {
 	public String toString() {
 		return ("jsteffi.Experiment: " + name);
 	}
-	
 	
 	public String toStringLong() {
 		

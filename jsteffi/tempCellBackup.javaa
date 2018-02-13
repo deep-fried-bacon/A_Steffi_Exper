@@ -13,7 +13,6 @@ import fiji.threshold.*;
 import java.util.*;
 import java.io.*;
 import java.time.LocalDate;
-import java.awt.*;
 
 import jsteffi.utilities.*;
 
@@ -26,16 +25,11 @@ public class Cell {
 	
 	public ArrayList<Double> roiX = new ArrayList<Double>(0);
 	public ArrayList<Double> roiY = new ArrayList<Double>(0);
-
-	//public 
-	//public Hashtable<String,MutableDouble> geoData = new Hashtable<String,MutableDouble>();
-	//Rectangle bounds =
 	
 	public boolean nucsLoaded = false;
 
 	public ArrayList<Nucleus> nucs = new ArrayList<Nucleus>();
 	public int nucCount = -1;
-	
 		
 	public ImagePlus cellHyp = null;
 	public ImagePlus cellOrthStack = null;
@@ -53,8 +47,6 @@ public class Cell {
 		
 		this.roiPath = roiPath;
 		roi = openRoiCsv(roiPath, cal);
-		//Rectangle bounds
-		
 	}
 		
 	public Roi openRoiCsv(File roiCsvPath, Calibration cal) {
@@ -84,9 +76,6 @@ public class Cell {
 			IJ.log("in Cell.openRoiCsv exception: " + e);
 			return null;
 		}
-		
-		
-		
 	}	
 		
 	public void makeCellHyp() {
@@ -271,141 +260,6 @@ public class Cell {
 		
 	// }
 	
-	
-	
-	public void orthMsrments() {
-
-		Duplicator d = new Duplicator();
-		int nucChan = hemiseg.exper.channels.get("Nuclei");
-			
-	
-		ImagePlus nucChannelStack;
-		if (nucChan > hemiseg.hyp.getNChannels()) {
-			IJ.log("nucChan issue in orthMsrments, cell: " + this);
-			nucChannelStack = d.run(hemiseg.hyp, 1, 1, 1, hemiseg.hyp.getNSlices(), 1, 1);	
-
-		}
-		else {
-			nucChannelStack = d.run(hemiseg.hyp, nucChan, nucChan, 1, hemiseg.hyp.getNSlices(), 1, 1);	
-		}
-		
-		ResultsTable rt = new ResultsTable();
-		
-		for (int nucID = 0; nucID < nucs.size(); nucID++) {
-			Nucleus nuc = nucs.get(nucID);
-			
-			nuc.setStack(cropStack(nucChannelStack, nuc.roi));
-			
-			nuc.setOrthStack(verticalCrossSection(nuc.getStack(),null));
-			
-			/* z-Projection */
-			ZProjector zp = new ZProjector();
-			nuc.setOrth(zp.run(nuc.getOrthStack(),"max"));
-			
-			/* Auto Threshold */
-			Auto_Threshold at = new Auto_Threshold();
-			Object[] temp2 = at.exec(nuc.getOrth(), "IsoData", false, false, true, false, false, false);
-			nuc.setOrthThresh((ImagePlus)temp2[1]);
-			
-			
-			/* Particle Analyzer */
-			nuc.getOrthThresh().setOverlay(null);
-			rt.reset();
-			int msr = Measurements.FERET + Measurements.AREA + Measurements.CENTROID + Measurements.RECT;
-			ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_OVERLAY_OUTLINES, msr, rt, 0, Double.POSITIVE_INFINITY);
-			pa.analyze(nuc.getOrthThresh());
-			Overlay nucOrthRois = nuc.getOrthThresh().getOverlay();
-			nuc.getOrthThresh().setOverlay(null);
-
-			
-			int index = 0;
-
-			if (nucOrthRois.size() > 1) {
-				/** exception or something
-				**/
-				
-				int count = 0;
-				for (int j = 0; j < nucOrthRois.size(); j++) {
-					if (nucOrthRois.get(j).getStatistics().area > 75) {
-						count++;
-						index = j;	
-					}
-				}
-				
-				if (count > 1) {
-					IJ.log(hemiseg.name + " vl"+vlNum);
-
-					for (int j = 0; j < nucOrthRois.size(); j++) {
-						IJ.log("    \t" + nucOrthRois.get(j).getStatistics().area);
-					}
-					hemiseg.exper.specCount2++;
-					continue;
-				}
-				
-				else if (count < 1) {
-					// nuc.orthThresh.show();
-					IJ.log("all particles too small");
-					for (int j = 0; j < nucOrthRois.size(); j++) {
-						IJ.log("    \t" + nucOrthRois.get(j).getStatistics().area);
-					}
-					continue;
-				}
-				/*
-				if (count == 1) {				
-					minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),index);
-					area = rt.getValueAsDouble(rt.getColumnIndex("Area"),index);
-				} 
-				else {
-					IJ.log(hemiseg.name + " vl"+vlNum);
-
-					for (int j = 0; j < nucOrthRois.size(); j++) {
-						IJ.log("    \t" + nucOrthRois.get(j).getStatistics().area);
-					}
-					hemiseg.exper.specCount++;
-					continue;
-				}
-				*/
-			} 
-			else if (nucOrthRois.size() < 1) {
-				nuc.getOrthThresh().show();
-				IJ.log("fuck, no particles for nuc orthview");
-				continue;
-			}					
-			
-			hemiseg.exper.specCount++;
-
-			double minFeret = rt.getValueAsDouble(rt.getColumnIndex("MinFeret"),index);
-			double area = rt.getValueAsDouble(rt.getColumnIndex("Area"),index);
-			double height = rt.getValueAsDouble(rt.getColumnIndex("Height"), index);
-			double width = rt.getValueAsDouble(rt.getColumnIndex("Width"), index);
-
-			
-			// nuc.orthThresh.show();
-			// rt.show("nucID");
-				
-			nuc.orthRoi = nucOrthRois.get(index);
-
-
-			if (nuc.data3D == null) {
-				nuc.data3D = new Hashtable<String, MutableDouble>(1);
-			}
-			
-			nuc.data3D.put("Thickness from MinFeret",new MutableDouble(minFeret));
-			nuc.data3D.put("Thickness from Height",new MutableDouble(height));
-			nuc.data3D.put("Orth Width",new MutableDouble(width));
-
-			nuc.data3D.put("Orth Area", new MutableDouble(area));;	
-			
-		}
-	
-		
-	}
-	
-	
-	
-	
-	
-	
 	// public void makeCellXOrthView() {
 		// if (cellHyp == null) {
 			// makeCellHyp();
@@ -469,123 +323,77 @@ public class Cell {
 		this.cellOrthStack = verticalCrossSection(cellHyp, null);
 	}
 	
-	
-	
-	
-	public MutableDouble yScaled(MutableDouble num) {
-		Rectangle bounds = roi.getBounds();
-		double height = bounds.height;
-		double y = bounds.y;
+	/** xToStack and yToStack act as booleans with 
+		0 --> false
+		1 --> true
+		other --> error **/  
+	// public static ImagePlus[] orthView(ImagePlus imp, int xToStack, int yToStack) {
 		
-		double temp = num.get();
-		temp = temp - y;
-		double temp2 = temp/height;
+		// if (!(xToStack == 0 || xToStack == 1)) {
+			// /*** exception ***/
+			// IJ.log("value passed to orthView for yxToStack must equal 0 or 1");
+			// return null;
+		// } 
+		// if (!(yToStack == 0 || yToStack == 1)) {
+			// /*** exception ***/
+			// IJ.log("value passed to orthView for yToStack must equal 0 or 1");
+			// return null;
+		// } 
 		
-		MutableDouble outNum = new MutableDouble(temp2);
-		return outNum;
+		// ImageStack impStack = imp.getStack();
 		
-	}
-	
-	public MutableDouble yScaled(double num) {
-		Rectangle bounds = roi.getBounds();
-		double height = bounds.height;
-		double y = bounds.y;
+		// int staticXLength = imp.getDimensions()[0];
+		// int staticYLength = imp.getDimensions()[1];
 		
-		//double temp = num.get();
-		//temp = num - y;
-		double temp = num/height;
+		// int staticChannelCount = imp.getDimensions()[2];
+		// int staticZLength = imp.getDimensions()[3];
 		
-		MutableDouble outNum = new MutableDouble(temp);
-		return outNum;
 		
-	}
-	
-	public void nucsYScaled () {
-		for (int nucID = 0; nucID < nucCount; nucID++) {
-			Nucleus nuc = nucs.get(nucID);
-			double inY = nuc.geoData.get("Y").get();
-			double inY2 = hemiseg.cal.getRawY(inY);
-			MutableDouble outY = nuc.cell.yScaled(inY2);
-			nuc.data3D.put("Y Scaled to Cell",outY);
+		// ImageStack[] outStacks = new ImageStack[staticChannelCount+1];
+		// if (xToStack == 1) { 
 			
-		}
-	}
-	
+			// for (int channel = 1; channel <= staticChannelCount; channel++) {
+				// ImageStack sliceHolder = new ImageStack(staticYLength,staticZLength);
+				
+				// for (int x = 0; x < staticXLength; x++) {
+					// byte[] xSlice = new byte[staticYLength*staticZLength];
+					
+					// for (int z = 0; z < staticZLength; z++) {
+						// ImageProcessor ip = impStack.getProcessor(imp.getStackIndex(channel,z+1,1));			
+						// byte[] pixels = (byte[])ip.getPixels();
+						// int y = 0;
+						// while ((y*staticXLength + x) < pixels.length && (z*staticYLength + y) < xSlice.length) {
+							// xSlice[z*staticYLength + y] = pixels[y*staticXLength + x];
+							// y++;
+						// }
+					// }
+					// ByteProcessor bp = new ByteProcessor(staticYLength,staticZLength,xSlice);
+					// sliceHolder.addSlice(bp);
+				// }
+				// outStacks[channel] = (sliceHolder.duplicate());
+			// }			
+		// }
+		
+		// ImagePlus[] outImps = new ImagePlus[outStacks.length - 1];
+		// for (int i = 0; i < outImps.length; i++) {
+			// ImagePlus temp = new ImagePlus((""+(i+1)), outStacks[i+1]);
+			// outImps[i] = temp.duplicate();
+		// }
+		 
+		// /** do the horizontal cross section
+		// **/
+		// /**
+			// if (yToStack == 1) {
+				
+			// }
+		// **/
+		// return outImps;
+	// }
+		
 	/**
 		if channels == null, uses all channels
 		*/
 	public static ImagePlus verticalCrossSection(ImagePlus imp, int[] channels) {
-		
-		if (imp == null) return null;
-		if (channels == null) {
-			channels = new int[imp.getNChannels()];
-			for (int i = 0; i < channels.length; i++) {
-				channels[i] = i+1;
-			}
-		}
-		
-		ImageStack impStack = imp.getStack();
-		
-		int xLength = imp.getDimensions()[0];
-		int yLength = imp.getDimensions()[1];
-		
-		//int staticChannelCount = imp.getDimensions()[2];
-		int zLength = imp.getDimensions()[3];
-		
-		
-		//ImageStack[] outStacks = new ImageStack[channels.length];
-		ImageStack outStack = new ImageStack(yLength, zLength, channels.length*xLength);
-		ImagePlus outImp = new ImagePlus();
-		//outImp.setStack(outStack);
-		//for (int channel = 1; channel <= staticChannelCount; channel++) {
-			
-		for (int i = 0; i < channels.length; i++) {
-			int channel = channels[i];
-			//ImageStack sliceHolder = new ImageStack(yLength,zLength);
-			
-			for (int x = 0; x < xLength; x++) {
-				byte[] xSlice = new byte[yLength*zLength];
-				
-				for (int z = 0; z < zLength; z++) {
-					ImageProcessor ip = impStack.getProcessor(imp.getStackIndex(channel,z+1,1));			
-					byte[] pixels = (byte[])ip.getPixels();
-					int y = 0;
-					while ((y*xLength + x) < pixels.length && (z*yLength + y) < xSlice.length) {
-						xSlice[z*yLength + y] = pixels[y*xLength + x];
-						y++;
-					}
-				}
-				
-				//ByteProcessor bp = new ByteProcessor(yLength,zLength,xSlice);
-				//sliceHolder.addSlice(bp);
-				//outStack.setPixels(xSlice,outImp.getStackIndex(channel+1,x+1,1));
-				//outStack.setPixels(xSlice,outImp.getStackIndex(channel+1,x+1,1));
-				outStack.setPixels(xSlice,x*channels.length+i+1);
-
-				
-			}
-			//outStacks[i] = (sliceHolder.duplicate());
-		}			
-		
-		
-		//ImagePlus[] outImps = new ImagePlus[outStacks.length];
-		// for (int i = 0; i < outImps.length; i++) {
-			// ImagePlus temp = new ImagePlus((""+(i)), outStacks[i]);
-			// outImps[i] = temp.duplicate();
-		// }
-		outImp.setStack(outStack);
-
-		outImp.setDimensions(channels.length,xLength,1);
-
-		return outImp;
-	}	
-	
-	
-	
-	
-	
-	
-	public static ImagePlus horizontalCrossSection(ImagePlus imp, int[] channels) {
 		
 		if (imp == null) return null;
 		if (channels == null) {
@@ -605,32 +413,31 @@ public class Cell {
 		
 		
 		//ImageStack[] outStacks = new ImageStack[channels.length];
-		ImageStack outStack = new ImageStack(xLength, zLength, channels.length*yLength);
+		ImageStack outStack = new ImageStack(yLength, zLength, channels.length*xLength);
 		ImagePlus outImp = new ImagePlus();
 		outImp.setStack(outStack);
-		outImp.setDimensions(channels.length,yLength,1);
+		outImp.setDimensions(channels.length,xLength,1);
 		//for (int channel = 1; channel <= staticChannelCount; channel++) {
 			
 		for (int i = 0; i < channels.length; i++) {
 			int channel = channels[i];
 			//ImageStack sliceHolder = new ImageStack(yLength,zLength);
 			
-			for (int y = 0; y < yLength; y++) {
-				byte[] ySlice = new byte[xLength*zLength];
+			for (int x = 0; x < xLength; x++) {
+				byte[] xSlice = new byte[yLength*zLength];
 				
 				for (int z = 0; z < zLength; z++) {
 					ImageProcessor ip = impStack.getProcessor(imp.getStackIndex(channel,z+1,1));			
 					byte[] pixels = (byte[])ip.getPixels();
-					int x = 0;
-					//while ((x*yLength + x) < pixels.length && (z*xLength + x) < ySlice.length) {
-					while ((y*xLength + x) < pixels.length && (z*xLength + x) < ySlice.length) {
-						ySlice[z*xLength + x] = pixels[y*xLength + x];
+					int y = 0;
+					while ((y*xLength + x) < pixels.length && (z*yLength + y) < xSlice.length) {
+						xSlice[z*yLength + y] = pixels[y*xLength + x];
 						y++;
 					}
 				}
-				//ByteProcessor bp = new ByteProcessor(yLength,zLength,ySlice);
+				//ByteProcessor bp = new ByteProcessor(yLength,zLength,xSlice);
 				//sliceHolder.addSlice(bp);
-				outStack.setPixels(ySlice,outImp.getStackIndex(channel+1,y+1,1));
+				outStack.setPixels(xSlice,outImp.getStackIndex(channel+1,x+1,1));
 			}
 			//outStacks[i] = (sliceHolder.duplicate());
 		}			
@@ -650,6 +457,71 @@ public class Cell {
 	/**
 		if channels == null, uses all channels
 		*/
+	public static ImagePlus[] horizontalCrossSection(ImagePlus imp, int[] channels) {
+		
+		if (imp == null) return null;
+		if (channels == null) {
+			channels = new int[imp.getNSlices()];
+			for (int i = 0; i < channels.length; i++) {
+				channels[i] = i+1;
+			}
+		}
+		
+		ImageStack impStack = imp.getStack();
+		
+		int staticXLength = imp.getDimensions()[0];
+		int staticYLength = imp.getDimensions()[1];
+		
+		//int staticChannelCount = imp.getDimensions()[2];
+		int staticZLength = imp.getDimensions()[3];
+		
+		
+		ImageStack[] outStacks = new ImageStack[channels.length];
+		
+		
+		//for (int channel = 1; channel <= staticChannelCount; channel++) {
+			
+		for (int i = 0; i < channels.length; i++) {
+			int channel = channels[i];
+			ImageStack sliceHolder = new ImageStack(staticXLength,staticZLength);
+			
+			for (int y = 0; y < staticYLength; y++) {
+				byte[] ySlice = new byte[staticXLength*staticZLength];
+				
+				for (int z = 0; z < staticZLength; z++) {
+					ImageProcessor ip = impStack.getProcessor(imp.getStackIndex(channel,z+1,1));			
+					byte[] pixels = (byte[])ip.getPixels();
+					int x = 0;
+					while ((x*staticYLength + y) < pixels.length && (z*staticXLength + x) < ySlice.length) {
+						ySlice[z*staticXLength + x] = pixels[y*staticXLength + x];
+						x++;
+					}
+				}
+				ByteProcessor bp = new ByteProcessor(staticXLength,staticZLength,ySlice);
+				//ImagePlus bloop = new ImagePlus(("ySlice " + y),bp);
+				//bloop.show();
+
+				sliceHolder.addSlice(bp);
+			}
+			outStacks[i] = (sliceHolder.duplicate());
+			//IJ.log("outStacks = " + outStacks);
+			
+		}			
+		
+		
+		ImagePlus[] outImps = new ImagePlus[outStacks.length];
+		for (int i = 0; i < outImps.length; i++) {
+			ImagePlus temp = new ImagePlus((""+(i)), outStacks[i]);
+			//temp.show();
+			outImps[i] = temp.duplicate();
+			//IJ.log("temp = " + temp);
+			//IJ.log("outImps = " + outImps);
+			//outImps[i].show();
+		}
+		 
+	
+		return outImps;
+	}
 			
 	public boolean countNucPixels() {
 		if (nucs.get(0).getStack() == null) {
@@ -710,7 +582,7 @@ public class Cell {
 	
 
 	public boolean countNucPixels2() {
-		return false;
+		
 	}
 
 
@@ -729,10 +601,8 @@ public class Cell {
 	// returns a duplicate
 	public static ImagePlus cropStack(ImagePlus imp, Roi r) {
 		imp.setRoi(r);
-		//IJ.log("imp.getNChannels
 		ImagePlus outImp = imp.duplicate();
 		imp.deleteRoi();
-		//IJ.log
 		return outImp;
 	}
 	

@@ -135,17 +135,6 @@ public class Hemisegment {
 		nucBin.setOverlay(null);
 	}
 
-	/** 
-		public void makeNucIntensData() {
-			
-		} 
-	**/
-	
-	public void makeCellDataPointers() {
-		vl3.makeNucDataPointers();
-		vl4.makeNucDataPointers();
-	}
-	
 	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum) {
 		String[] headings = rt.getHeadings();
 		int colCount = headings.length;
@@ -170,7 +159,6 @@ public class Hemisegment {
 		}
 		return row;
 	}
-	
 	
 	public String buildFileName(String suffix) {
 		return (name + suffix);
@@ -217,10 +205,6 @@ public class Hemisegment {
 		int[] be = {begin,end};
 		return be;
 	}
-	
-	
-	
-	
 	
 	
 	public String toString() {
