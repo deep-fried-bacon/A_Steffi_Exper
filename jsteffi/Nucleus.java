@@ -1,9 +1,16 @@
+/*
+	data can contain geoHeadings, "orthRoi - " + geoHeadings, 
+		"vol pix count", "vol pix sum", "yScaled"
+*/
 package jsteffi;
 import ij.*;
 import ij.io.*;
 import ij.gui.*;
 import ij.measure.*;
 import ij.plugin.filter.*;
+import ij.plugin.*;
+import ij.process.*;
+
 
 import java.util.*;
 
@@ -14,11 +21,9 @@ public class Nucleus {
 	public Cell cell;
 	public int id;
 	public Roi roi;
-	public Hashtable<String, MutableDouble> geoData;
+	public Hashtable<String, MutableDouble> data;
+	//public Hashtable<String, MutableDouble[]> sliceData;
 	
-	public Hashtable<String, MutableDouble[]> intensData;
-		
-	public Hashtable<String, MutableDouble> data3D = null;
 	
 	private ImagePlus stack = null;
 	private ImagePlus orthStack = null;
@@ -35,10 +40,12 @@ public class Nucleus {
 	public double xCal = -1;
 	public double yCal = -1;
 	public double zCal = -1;
+	
+
 
 	
-	public Nucleus (Cell cell, int id, Roi roi, Hashtable<String, MutableDouble> geoData) {
-		if (cell == null || roi == null || geoData == null) {
+	public Nucleus (Cell cell, int id, Roi roi, Hashtable<String, MutableDouble> data) {
+		if (cell == null || roi == null || data == null) {
 			 throw new NullPointerException();
 		}
 		else {
@@ -52,9 +59,135 @@ public class Nucleus {
 			
 			this.id = id;
 			this.roi = roi;
-			this.geoData = geoData;		
+			this.data = data;		
 		}
 	}
+	
+	
+	
+	public void makeNucImps() {	
+		int nucChan = cell.hemiseg.exper.channels.get("Nuclei");
+		ImagePlus cellNucChan;
+		
+		Duplicator d = new Duplicator();
+		if (nucChan < cell.hemiseg.hyp.getNChannels()) {
+			cellNucChan = d.run(cell.hemiseg.hyp, nucChan, nucChan, 1, cell.hemiseg.sliceCount, 1, 1);
+		}
+		else {
+			/* exception */
+			//cellNucChan d.run(cell.hemiseg.hyp, 1, 1, 1, cell.hemiseg.sliceCount, 1, 1)
+			return;
+		}
+		
+		
+		setStack(Functions.cropStack(cellNucChan, roi));
+			
+		setOrthStack(Functions.verticalCrossSection(stack,null));
+		
+		setOrth((new ZProjector()).run(orthStack,"max"));
+		
+		setOrthThresh(Functions.autoThresholdSlice(orth,"IsoData"));
+	
+		ResultsTable rt = new ResultsTable();
+		Overlay nucOrthOverlay = Functions.particleAnalyze(orthThresh, Hemisegment.GEO, rt);
+		
+		int index = 0;
+		if (nucOrthOverlay.size() > 1) {
+			int count = 0;
+			for (int j = 0; j < nucOrthOverlay.size(); j++) {
+				if (nucOrthOverlay.get(j).getStatistics().area > 75) {
+					count++;
+					index = j;	
+				}
+			}
+			if (count > 1) {
+				/* exception */
+				IJ.log(cell.hemiseg.name + " vl"+cell.vlNum + ": makeNucImps - multiple large rois in nuc cross-section");
+				for (int j = 0; j < nucOrthOverlay.size(); j++) {
+					IJ.log("    \t" + nucOrthOverlay.get(j).getStatistics().area);
+				}
+				return;
+			}
+			else if (count < 1) {
+				/* exception */
+				IJ.log(cell.hemiseg.name + " vl"+cell.vlNum + ": makeNucImps - no large rois in nuc cross-section");
+				for (int j = 0; j < nucOrthOverlay.size(); j++) {
+					IJ.log("    \t" + nucOrthOverlay.get(j).getStatistics().area);
+				}
+				return;
+			}
+		} 
+		else if (nucOrthOverlay.size() < 1) {
+			/* exception */
+			IJ.log(cell.hemiseg.name + " vl"+cell.vlNum + ": makeNucImps - no rois in nuc cross-section");
+			return;
+		}	
+		data.putAll(Functions.getRtRow(rt,index,"orthRoi"));
+		orthRoi = nucOrthOverlay.get(index);
+	}
+
+	
+	public void countOrthPixels () {
+		setCroppedOrthStack(Functions.cropStack(orthStack, orthRoi));
+		//orthStack.deleteRoi();
+		int pixelCount = 0;
+		int pixelSum = 0;
+
+		
+		for (int slice = 0; slice < getCroppedOrthStack().getNSlices(); slice++) {
+			//IJ.log("slice " + slice);
+			
+			ImageProcessor ip = getCroppedOrthStack().getProcessor();
+			
+			//int width = ip.getWidth();
+			//int height = ip.getHeight();	
+			
+			byte[] pix = (byte[])ip.getPixels();
+			
+			for (int i = 0; i < pix.length; i++) {
+				int temp = pix[i]&0xff;
+				if (temp > 0){
+					pixelCount++;
+					pixelSum += temp;
+				}
+				else if (temp < 0) {
+					/* exception */
+					IJ.log("Nucleus.countOrthPixels : pixel value < 0");
+				}
+			}	
+		}
+		
+		//if (data3D == null) data3D = new Hashtable<String,MutableDouble>();
+		data.put("vol pix count", new MutableDouble((double)pixelCount));
+		data.put("vol pix sum", new MutableDouble((double)pixelSum));
+				
+	}
+		
+		
+	
+	
+
+	public void yScaled () {
+		double inY = data.get("Y").get();
+		double inY2 = cell.hemiseg.cal.getRawY(inY);
+		MutableDouble outY = cell.yScaled(inY2);
+		data.put("Y Scaled to Cell",outY);
+			
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public ImagePlus getStack() {
 		return stack;
@@ -208,14 +341,8 @@ public class Nucleus {
 		
 		if (roi == null) doesntHave += "roi, ";
 		else has += "roi, ";
-		if (geoData == null) doesntHave += "geoData, ";
-		else has += "geoData, ";
-		
-		
-		if (intensData == null) doesntHave += "intensData, ";
-		else has += "intensData, ";
-		if (data3D == null) doesntHave += "data3D, ";
-		else has += "data3D, ";
+		if (data == null) doesntHave += "data, ";
+		else has += "data, ";
 		
 		if (stack == null) doesntHave += "stack, ";
 		else has += "stack, ";
@@ -250,14 +377,11 @@ public class Nucleus {
 		temp += ("\nroi: " + roi);
 		
 		if (dataTables) {
-			temp += ("\ngeoData: " + geoData);
-			temp += ("\nintensData: " + intensData);
-			temp += ("\ndata3D: " + data3D);
+			temp += ("\ndata: " + data);
+
 		}
 		else {
-			temp += ("\ngeoData: size = " + geoData.size());
-			temp += ("\nintensData: size = " + intensData.size());
-			temp += ("\ndata3D: size = " + data3D.size());
+			temp += ("\ndata: " + data);
 		}
 		
 		temp += ("\nstack: " + stack);

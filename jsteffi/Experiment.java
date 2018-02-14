@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.nio.file.Files;
 import java.nio.charset.Charset;
 
+import jsteffi.utilities.*;
+
 
 public class Experiment {
 	public static ArrayList<Experiment> insts = new ArrayList<Experiment>();
@@ -26,9 +28,20 @@ public class Experiment {
 	public ArrayList<Hemisegment> hemisegs;
 	
 	
-	public int specCount = 0;
-	public int specCount2 = 0;
+	public ArrayList<Cell> cells;
+	public ArrayList<Nucleus> nucs;
 	
+	
+	
+	//public int specCount = 0;
+	//public int specCount2 = 0;
+	
+	public static Experiment experConstructEverything(File path, String outFileSuf, ArrayList<String> headings) {
+		Experiment exper = new Experiment(path);
+		exper.runEverything();
+		exper.exportNucData(outFileSuf, headings);
+		return exper;
+	}
 	
 	public Experiment(File path) {
 		insts.add(this);
@@ -37,14 +50,31 @@ public class Experiment {
 		this.path = path;
 		/** experView = new ExperimentView(this) **/
 		
-		parseName();
+		parseName(); // sets name, data, genotype
 
-		loadChannels();
+		loadChannels(); // sets channels 
 
-		createHemisegs();
+		createHemisegs(); // sets hemisegs
 		
-		loadNucs();
+		createIterables();
+		
+		//loadNucs();
 	}
+	
+	public void createIterables() {
+		cells = new ArrayList<Cell>();
+		nucs = new ArrayList<Nucleus>();
+		for (Hemisegment hemiseg : hemisegs) {
+			for (Cell c : hemiseg.cells) {
+				cells.add(c);
+				for (Nucleus nuc : c.nucs) {
+					nucs.add(nuc);
+				}
+			}
+			
+		}
+	}
+	
 	
 	public void close() {
 		insts.remove(insts.indexOf(this));
@@ -133,72 +163,105 @@ public class Experiment {
 	**/
  	
 		/** for now only dealing with data3D and geo, not intens **/
-	public boolean exportNucData(String fileSuf, ArrayList<String> geoHeadings, /** ArrayList<String> intensHeadings,**/ ArrayList<String> data3DHeadings){
-		//IJ.log("geoHeadings = " + geoHeadings);
-		//IJ.log("data3DHeadings = " + data3DHeadings);
+	// public boolean _exportNucData(String fileSuf, ArrayList<String> headings) {
+		
+		// File outCsv = new File(path, name + "_" + fileSuf + ".csv");
+		// BufferedWriter writer = null;
+		
+		// try {
+			// writer = new BufferedWriter(new FileWriter(outCsv));
+			// String labels = "Hemisegment,Cell,NucID,";
+			
+			// for (String heading : geoHeadings) {
+				// labels += (heading + ",");
+			// }
+			
+			
+			// writer.write(labels);
+			
+			// for (Hemisegment hemiseg : hemisegs) {
+				
+				// for (Nucleus nuc : hemiseg.vl3.nucs) {
+					// writer.newLine();
+
+					// String temp = (hemiseg.name + ",vl3," + nuc.id + ",");
+					// for (String heading : headings) {
+						// if (nuc.data.containsKey(heading)) temp += (nuc.data.get(heading) + ",");
+						// else temp += ",";
+					// }
+					// writer.write(temp);
+				// }
+				// writer.newLine();
+				
+				// for (Nucleus nuc : hemiseg.vl4.nucs) {
+					// writer.newLine();
+
+					// String temp = (hemiseg.name + ",vl4," + nuc.id + ",");
+					// for (String heading : headings) {
+						// if (nuc.data.containsKey(heading)) temp += (nuc.data.get(heading) + ",");
+						// else temp += ",";
+					// }
+					// writer.write(temp);
+				// }
+				// writer.newLine();
+			// }
+			
+			// writer.close();
+			// //IJ.log("specCount" + specCount);
+			// //IJ.log("specCount2" + specCount2);
+			// return true;
+		// }
+		// catch (FileNotFoundException e) {
+			// /** deal with exception appropriately **/
+			// IJ.log("FileNotFoundException in Experiment.exportNucData");
+			// return false;
+		// }
+		// catch (IOException e) {
+			// /** deal with exception appropriately **/
+			// IJ.log("IOException in Experiment.exportNucData");
+			// return false;
+		// }
+	// }
+	
+	
+	
+	public boolean exportNucData(String fileSuf, ArrayList<String> headings) {
+		
 		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
 		BufferedWriter writer = null;
 		
 		try {
 			writer = new BufferedWriter(new FileWriter(outCsv));
-			String headings = "Hemisegment,Cell,NucID,";
+			String labels = "Hemisegment,Cell,NucID,";
 			
-			for (String heading : geoHeadings) {
-				headings += (heading + ",");
-			}
-			for (String heading : data3DHeadings) {
-				headings += (heading + ",");
+			for (String heading : headings) {
+				labels += (heading + ",");
 			}
 			
-			writer.write(headings);
 			
-			for (Hemisegment hemiseg : hemisegs) {
-				
-				for (Nucleus nuc : hemiseg.vl3.nucs) {
-					writer.newLine();
-
-					String temp = (hemiseg.name + ",vl3," + nuc.id + ",");
-					for (String heading : geoHeadings) {
-						temp += (nuc.geoData.get(heading) + ",");
-					}
-					
-					for (String heading : data3DHeadings) {
-						if (nuc.data3D == null) {
-							//IJ.log(temp);
-							temp += "*,";
-
+			writer.write(labels+"\n");
+			
+			
+			for (Cell c : cells) {
+				for (Nucleus nuc : c.nucs) {
+					String temp = c.hemiseg.name + ",vl"+c.vlNum + "," + nuc.id + ",";
+					for (String heading : headings) {
+						String heading2 = headingRename(heading);
+						if (nuc.data.containsKey(heading2)) {
+							MutableDouble val = nuc.data.get(heading2);
+							if (val != null) {
+								temp += (nuc.data.get(heading2));
+							}
 						}
-						else {
-							temp += (nuc.data3D.get(heading) + ",");
-						}
+						temp += ",";
 					}
-					writer.write(temp);
-				}
-				writer.newLine();
-				
-				for (Nucleus nuc : hemiseg.vl4.nucs) {
-					writer.newLine();
-
-					String temp = (hemiseg.name + ",vl4," + nuc.id + ",");
-					for (String heading : geoHeadings) {
-						temp += (nuc.geoData.get(heading) + ",");
-					}
-					for (String heading : data3DHeadings) {
-						if (nuc.data3D == null) {
-							//IJ.log(temp);
-							temp += "*,";
-						}
-						else {
-							temp += (nuc.data3D.get(heading) + ",");
-						}
-					}
-					writer.write(temp);
-				}
+					writer.write(temp + "\n");
+				}	
 				writer.newLine();
 			}
+			
+			
 			writer.close();
-			IJ.log("specCount" + specCount);
-			IJ.log("specCount2" + specCount2);
 			return true;
 		}
 		catch (FileNotFoundException e) {
@@ -212,6 +275,57 @@ public class Experiment {
 			return false;
 		}
 	}
+	
+	
+	public static String headingRename(String heading) {
+		Hashtable<String,String> headingDict = new Hashtable<String,String>();
+		headingDict.put("Thickness(minFeret)", "orthRoi - MinFeret");
+		headingDict.put("Thickness(Height)", "orthRoi - Height");
+		headingDict.put("Cross-sectional Area", "orthRoi - Area");
+		// headingDict.put("orthRoi - minFeret", "Thickness(minFeret)");
+		// headingDict.put("orthRoi - minFeret", "Thickness(minFeret)");
+		// headingDict.put("orthRoi - minFeret", "Thickness(minFeret)");
+		// headingDict.put("orthRoi - minFeret", "Thickness(minFeret)");
+		
+		if (headingDict.containsKey(heading)) return headingDict.get(heading);
+		else return heading;
+
+		
+	}
+	
+	
+	
+	
+	public void runEverything() {
+		makeNucImps();
+		countNucOrthPixels();
+		nucYScaled();
+	}
+	
+	public void makeNucImps() {
+		IJ.log("making nuc cross-sections...");
+		for (Nucleus nuc : nucs) {
+			nuc.makeNucImps();
+		}
+	}
+	
+	public void countNucOrthPixels() {
+		IJ.log("counting pixels in nuc volume...");
+		for (Nucleus nuc : nucs) {
+			nuc.countOrthPixels();
+		}
+	}
+	public void nucYScaled() {
+		IJ.log("scaling nuc y coordinates to cell");
+		for (Nucleus nuc : nucs) {
+			nuc.yScaled();
+		}
+	}
+	
+	
+	
+	
+	
 	
 	
 	public String toString() {

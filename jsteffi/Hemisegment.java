@@ -45,13 +45,18 @@ public class Hemisegment {
 	public Cell vl3 = null;
 	public Cell vl4 = null;
 	
+	public ArrayList<Cell> cells = new ArrayList<Cell>(); // for the purpose of iterating, especially in the context of not knowing if both cells are there
+	
+	
 	public Hemisegment(Experiment exper, File hsPath) {
 		this.exper = exper;
 		this.path = hsPath;
 		name = path.getName();
 		IJ.log("starting hemiseg:" + name);
 
-		loadFiles();
+		loadFiles();	// sets fileList, (if files are there) hyp -->(cal, sliceCount), 
+						// nucBin, vl3Csv-->(vl3), vl4Csv-->(vl4)
+		loadNucs();
 	}
 	
 	public void loadFiles() {
@@ -80,38 +85,53 @@ public class Hemisegment {
 		if (cal != null) {
 			if (vl3Csv != null) {
 				vl3 = new Cell(this, vl3Csv, 3, cal);
+				cells.add(vl3);
 			}
 			if (vl4Csv != null) {
 				vl4 = new Cell(this, vl4Csv, 4, cal);
+				cells.add(vl4);
 			}
 		}
 	}
 	
 	public void loadNucs() {
-		nucBin.setOverlay(null);
+		// nucBin.setOverlay(null);
 		
 		rt = new ResultsTable();
 		
-		ParticleAnalyzer pa = new ParticleAnalyzer(
-			ParticleAnalyzer.SHOW_OVERLAY_OUTLINES,
-			GEO,rt,0,
-			Double.POSITIVE_INFINITY);
+		// ParticleAnalyzer pa = new ParticleAnalyzer(
+			// ParticleAnalyzer.SHOW_OVERLAY_OUTLINES,
+			// GEO,rt,0,
+			// Double.POSITIVE_INFINITY);
 	
-		pa.analyze(nucBin);
-		Overlay nucRoisH = nucBin.getOverlay();
+		// pa.analyze(nucBin);
+		// Overlay nucRoisH = nucBin.getOverlay();
 		
-		int vl3NucCount = 0;
-		int vl4NucCount = 0;
+		Overlay nucOverlay = Functions.particleAnalyze(nucBin,GEO,rt);
 		
+		//int vl3NucCount = 0;
+		//int vl4NucCount = 0;
+		//for (Cell c : cells) {
+			//c
+		//}
 		geoHeadings = rt.getHeadings();
 		
-		for (int i = 0; i < nucRoisH.size(); i++) {
-			Hashtable<String,MutableDouble> nucRow = getRtRow(rt,i);
-			Roi nucRoi = nucRoisH.get(i);
+		for (int i = 0; i < nucOverlay.size(); i++) {
+			Hashtable<String,MutableDouble> nucRow = Functions.getRtRow(rt,i);
+			Roi nucRoi = nucOverlay.get(i);
 			int nucRoiX = (int)nucRoi.getContourCentroid()[0];
 			int nucRoiY = (int)nucRoi.getContourCentroid()[1];
 
-			if (vl3 != null && vl3.roi.contains(nucRoiX,nucRoiY)) {
+			
+			
+			for (Cell c : cells) {
+				if (c.roi.contains(nucRoiX,nucRoiY)) {
+					c.nucs.add(new Nucleus(c, c.nucCount, nucRoi, nucRow));
+					c.nucCount++;
+					continue;
+				}
+			}
+			/* if (vl3 != null && vl3.roi.contains(nucRoiX,nucRoiY)) {
 				vl3.nucs.add(new Nucleus(vl3, vl3NucCount, nucRoi, nucRow));
 				vl3NucCount++;
 			}
@@ -120,45 +140,25 @@ public class Hemisegment {
 				vl4NucCount++;
 			}
 			else {
-				/*** exception ***/
+				/*** exception 
 				IJ.log("uh-oh nucRoi not contained in any cells");
-			}
+			} */
 		}
-		if (vl3 != null) {
-			vl3.nucsLoaded = true;
+		
+		
+		
+		/* if (vl3 != null) {
+			//vl3.nucsLoaded = true;
 			vl3.nucCount = vl3.nucs.size();
 		}
 		if (vl4 != null) {
-			vl4.nucsLoaded = true;
+			//vl4.nucsLoaded = true;
 			vl4.nucCount = vl4.nucs.size();
-		}
-		nucBin.setOverlay(null);
+		} */
+		//nucBin.setOverlay(null);
 	}
 
-	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum) {
-		String[] headings = rt.getHeadings();
-		int colCount = headings.length;
-		Hashtable<String,MutableDouble> row = new Hashtable<String,MutableDouble>(colCount);
-		
-		for (int i = 0; i < colCount; i++) {
-			String heading = headings[i];
-			
-			int colIndex = rt.getColumnIndex(heading);
-			if (colIndex == ResultsTable.COLUMN_NOT_FOUND) {
-				if (heading != "Label") {
-					/*** exception ***/
-					IJ.log("in getRtRow rt heading missing, heading = " + heading);
-				}
-			}
-			else {
-			
-				double val = rt.getValueAsDouble(colIndex,rowNum);
-			
-				row.put(heading,new MutableDouble(val));
-			}
-		}
-		return row;
-	}
+
 	
 	public String buildFileName(String suffix) {
 		return (name + suffix);
@@ -168,43 +168,43 @@ public class Hemisegment {
 		return new File(path, name + suffix);
 	}
 	
-	public static int[] thing (double[] inputList) {
-		int begin = 0;
-		double i = inputList[begin];
-		while(i < 20) {
-			begin++;
-			i += inputList[begin];
-		}
+	// public static int[] thing (double[] inputList) {
+		// int begin = 0;
+		// double i = inputList[begin];
+		// while(i < 20) {
+			// begin++;
+			// i += inputList[begin];
+		// }
 		
-		int end = inputList.length - 1;
-		i = inputList[end];
+		// int end = inputList.length - 1;
+		// i = inputList[end];
 		
-		while (i < 20) {
-			end--;
-			i += inputList[end];
-		}
-		int[] be = {begin,end};
-		return be;
-	}
+		// while (i < 20) {
+			// end--;
+			// i += inputList[end];
+		// }
+		// int[] be = {begin,end};
+		// return be;
+	// }
 	
-	public static int[] thing (long[] inputList) {
-		int begin = 0;
-		long i = inputList[begin];
-		while(i < 20) {
-			begin++;
-			i += inputList[begin];
-		}
+	// public static int[] thing (long[] inputList) {
+		// int begin = 0;
+		// long i = inputList[begin];
+		// while(i < 20) {
+			// begin++;
+			// i += inputList[begin];
+		// }
 		
-		int end = inputList.length - 1;
-		i = inputList[end];
+		// int end = inputList.length - 1;
+		// i = inputList[end];
 		
-		while (i < 20) {
-			end--;
-			i += inputList[end];
-		}
-		int[] be = {begin,end};
-		return be;
-	}
+		// while (i < 20) {
+			// end--;
+			// i += inputList[end];
+		// }
+		// int[] be = {begin,end};
+		// return be;
+	// }
 	
 	
 	public String toString() {
