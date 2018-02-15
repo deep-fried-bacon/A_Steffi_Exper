@@ -95,25 +95,13 @@ public class Hemisegment {
 	}
 	
 	public void loadNucs() {
-		// nucBin.setOverlay(null);
 		
 		rt = new ResultsTable();
 		
-		// ParticleAnalyzer pa = new ParticleAnalyzer(
-			// ParticleAnalyzer.SHOW_OVERLAY_OUTLINES,
-			// GEO,rt,0,
-			// Double.POSITIVE_INFINITY);
-	
-		// pa.analyze(nucBin);
-		// Overlay nucRoisH = nucBin.getOverlay();
 		
 		Overlay nucOverlay = Functions.particleAnalyze(nucBin,GEO,rt);
 		
-		//int vl3NucCount = 0;
-		//int vl4NucCount = 0;
-		//for (Cell c : cells) {
-			//c
-		//}
+		
 		geoHeadings = rt.getHeadings();
 		
 		for (int i = 0; i < nucOverlay.size(); i++) {
@@ -131,31 +119,12 @@ public class Hemisegment {
 					continue;
 				}
 			}
-			/* if (vl3 != null && vl3.roi.contains(nucRoiX,nucRoiY)) {
-				vl3.nucs.add(new Nucleus(vl3, vl3NucCount, nucRoi, nucRow));
-				vl3NucCount++;
-			}
-			else if (vl4 != null && vl4.roi.contains(nucRoiX,nucRoiY)) {
-				vl4.nucs.add(new Nucleus(vl4, vl4NucCount, nucRoi, nucRow));
-				vl4NucCount++;
-			}
-			else {
-				/*** exception 
-				IJ.log("uh-oh nucRoi not contained in any cells");
-			} */
+			
 		}
 		
 		
 		
-		/* if (vl3 != null) {
-			//vl3.nucsLoaded = true;
-			vl3.nucCount = vl3.nucs.size();
-		}
-		if (vl4 != null) {
-			//vl4.nucsLoaded = true;
-			vl4.nucCount = vl4.nucs.size();
-		} */
-		//nucBin.setOverlay(null);
+	
 	}
 
 
@@ -168,43 +137,6 @@ public class Hemisegment {
 		return new File(path, name + suffix);
 	}
 	
-	// public static int[] thing (double[] inputList) {
-		// int begin = 0;
-		// double i = inputList[begin];
-		// while(i < 20) {
-			// begin++;
-			// i += inputList[begin];
-		// }
-		
-		// int end = inputList.length - 1;
-		// i = inputList[end];
-		
-		// while (i < 20) {
-			// end--;
-			// i += inputList[end];
-		// }
-		// int[] be = {begin,end};
-		// return be;
-	// }
-	
-	// public static int[] thing (long[] inputList) {
-		// int begin = 0;
-		// long i = inputList[begin];
-		// while(i < 20) {
-			// begin++;
-			// i += inputList[begin];
-		// }
-		
-		// int end = inputList.length - 1;
-		// i = inputList[end];
-		
-		// while (i < 20) {
-			// end--;
-			// i += inputList[end];
-		// }
-		// int[] be = {begin,end};
-		// return be;
-	// }
 	
 	
 	public String toString() {

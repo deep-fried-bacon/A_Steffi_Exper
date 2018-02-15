@@ -283,6 +283,47 @@ public class Functions {
 	
 	
 	
+	//from Hemisegment
+	
+	
+		// public static int[] thing (double[] inputList) {
+		// int begin = 0;
+		// double i = inputList[begin];
+		// while(i < 20) {
+			// begin++;
+			// i += inputList[begin];
+		// }
+		
+		// int end = inputList.length - 1;
+		// i = inputList[end];
+		
+		// while (i < 20) {
+			// end--;
+			// i += inputList[end];
+		// }
+		// int[] be = {begin,end};
+		// return be;
+	// }
+	
+	// public static int[] thing (long[] inputList) {
+		// int begin = 0;
+		// long i = inputList[begin];
+		// while(i < 20) {
+			// begin++;
+			// i += inputList[begin];
+		// }
+		
+		// int end = inputList.length - 1;
+		// i = inputList[end];
+		
+		// while (i < 20) {
+			// end--;
+			// i += inputList[end];
+		// }
+		// int[] be = {begin,end};
+		// return be;
+	// }
+	
 	
 	
 	

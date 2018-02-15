@@ -33,10 +33,9 @@ public class Experiment {
 	
 	
 	
-	//public int specCount = 0;
-	//public int specCount2 = 0;
 	
-	public static Experiment experConstructEverything(File path, String outFileSuf, ArrayList<String> headings) {
+	
+	public static Experiment experConstructEverything(File path, String outFileSuf, String[] headings) {
 		Experiment exper = new Experiment(path);
 		exper.runEverything();
 		exper.exportNucData(outFileSuf, headings);
@@ -78,6 +77,16 @@ public class Experiment {
 	
 	public void close() {
 		insts.remove(insts.indexOf(this));
+		for (Nucleus nuc : nucs) {
+			nuc = null;
+		}
+		for (Cell c : cells) {
+			c = null;
+		}
+		for (Hemisegment hemiseg : hemisegs) {
+			hemiseg = null;
+		}
+		//this = null;
 	}
 	
 	public void parseName() {
@@ -156,76 +165,11 @@ public class Experiment {
 		}
 	}
 	
-	/** give null ArrayLists if you don't 
-		want any data printed from that set of data 
-		
-		if String FileSuf == null?
-	**/
- 	
-		/** for now only dealing with data3D and geo, not intens **/
-	// public boolean _exportNucData(String fileSuf, ArrayList<String> headings) {
-		
-		// File outCsv = new File(path, name + "_" + fileSuf + ".csv");
-		// BufferedWriter writer = null;
-		
-		// try {
-			// writer = new BufferedWriter(new FileWriter(outCsv));
-			// String labels = "Hemisegment,Cell,NucID,";
-			
-			// for (String heading : geoHeadings) {
-				// labels += (heading + ",");
-			// }
-			
-			
-			// writer.write(labels);
-			
-			// for (Hemisegment hemiseg : hemisegs) {
-				
-				// for (Nucleus nuc : hemiseg.vl3.nucs) {
-					// writer.newLine();
 
-					// String temp = (hemiseg.name + ",vl3," + nuc.id + ",");
-					// for (String heading : headings) {
-						// if (nuc.data.containsKey(heading)) temp += (nuc.data.get(heading) + ",");
-						// else temp += ",";
-					// }
-					// writer.write(temp);
-				// }
-				// writer.newLine();
-				
-				// for (Nucleus nuc : hemiseg.vl4.nucs) {
-					// writer.newLine();
-
-					// String temp = (hemiseg.name + ",vl4," + nuc.id + ",");
-					// for (String heading : headings) {
-						// if (nuc.data.containsKey(heading)) temp += (nuc.data.get(heading) + ",");
-						// else temp += ",";
-					// }
-					// writer.write(temp);
-				// }
-				// writer.newLine();
-			// }
-			
-			// writer.close();
-			// //IJ.log("specCount" + specCount);
-			// //IJ.log("specCount2" + specCount2);
-			// return true;
-		// }
-		// catch (FileNotFoundException e) {
-			// /** deal with exception appropriately **/
-			// IJ.log("FileNotFoundException in Experiment.exportNucData");
-			// return false;
-		// }
-		// catch (IOException e) {
-			// /** deal with exception appropriately **/
-			// IJ.log("IOException in Experiment.exportNucData");
-			// return false;
-		// }
-	// }
 	
 	
 	
-	public boolean exportNucData(String fileSuf, ArrayList<String> headings) {
+	public boolean exportNucData(String fileSuf, String[] headings) {
 		
 		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
 		BufferedWriter writer = null;
@@ -234,8 +178,9 @@ public class Experiment {
 			writer = new BufferedWriter(new FileWriter(outCsv));
 			String labels = "Hemisegment,Cell,NucID,";
 			
-			for (String heading : headings) {
-				labels += (heading + ",");
+			//for (String heading : headings) {
+			for (int i = 0; i < headings.length; i++) {
+				labels += (headings[i] + ",");
 			}
 			
 			
@@ -245,8 +190,8 @@ public class Experiment {
 			for (Cell c : cells) {
 				for (Nucleus nuc : c.nucs) {
 					String temp = c.hemiseg.name + ",vl"+c.vlNum + "," + nuc.id + ",";
-					for (String heading : headings) {
-						String heading2 = headingRename(heading);
+					for (int i = 0; i < headings.length; i++) {
+						String heading2 = headingRename(headings[i]);
 						if (nuc.data.containsKey(heading2)) {
 							MutableDouble val = nuc.data.get(heading2);
 							if (val != null) {
@@ -298,13 +243,18 @@ public class Experiment {
 		nucs.get(0).makeNucImps();
 		nucs.get(0).countOrthPixels();
 		nucs.get(0).yScaled();
-		nucs.get(0).sumSlicesOrthStack();
+		//nucs.get(0).sumSlicesOrthStack();
+		//nucs.get(0).sumSlicesStack();
+		nucs.get(0).allSliceSums();
+
+		
 	}
 	
 	public void runEverything() {
 		makeNucImps();
 		countNucOrthPixels();
 		nucYScaled();
+		allSliceSums();
 	}
 	
 	
@@ -326,6 +276,13 @@ public class Experiment {
 		IJ.log("scaling nuc y coordinates to cell");
 		for (Nucleus nuc : nucs) {
 			nuc.yScaled();
+		}
+	}
+	
+	public void allSliceSums() {
+		IJ.log("scaling nuc y coordinates to cell");
+		for (Nucleus nuc : nucs) {
+			nuc.allSliceSums();
 		}
 	}
 	

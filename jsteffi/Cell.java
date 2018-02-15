@@ -136,47 +136,32 @@ public class Cell {
 	public MutableDouble yScaled(MutableDouble num) {
 		Rectangle bounds = roi.getBounds();
 		double height = bounds.height;
-		double y = bounds.y;
+		double start = bounds.y;
 		
-		double temp = num.get();
-		temp = temp - y;
-		double temp2 = temp/height;
+		double yPoint = num.get();
+		double yPointTemp = yPoint - start;
+		double yPointScaled = yPointTemp/height;
 		
-		MutableDouble outNum = new MutableDouble(temp2);
+		MutableDouble outNum = new MutableDouble(yPointScaled);
 		return outNum;
 		
 	}
 	
-	public MutableDouble yScaled(double num) {
+	public MutableDouble yScaled(double yPoint) {
 		Rectangle bounds = roi.getBounds();
 		double height = bounds.height;
-		double y = bounds.y;
+		double start = bounds.y;
 		
 		//double temp = num.get();
 		//temp = num - y;
-		double temp = num/height;
+		double yPointTemp = yPoint - start;
+		double yPointScaled = yPointTemp/height;
 		
-		MutableDouble outNum = new MutableDouble(temp);
+		MutableDouble outNum = new MutableDouble(yPointScaled);
 		return outNum;
 		
 	}
 	
-	// public void nucsYScaled () {
-		// for (int nucID = 0; nucID < nucCount; nucID++) {
-			// Nucleus nuc = nucs.get(nucID);
-			// double inY = nuc.geoData.get("Y").get();
-			// double inY2 = hemiseg.cal.getRawY(inY);
-			// MutableDouble outY = nuc.cell.yScaled(inY2);
-			// nuc.data3D.put("Y Scaled to Cell",outY);
-			
-		// }
-	// }
-	
-	
-	
-	
-	
-
 	
 	/*** ArrayList<double> to float[]
 	***/
@@ -214,8 +199,7 @@ public class Cell {
 		if (roiY == null) doesntHave += "roiY, ";
 		else has += "roiY, ";
 		
-		//if (nucsLoaded == null) doesntHave += "nucsLoaded, ";
-		//else has += "nucsLoaded, ";
+		
 		
 		if (nucs == null) doesntHave += "nucs, ";
 		else has += "nucs, ";

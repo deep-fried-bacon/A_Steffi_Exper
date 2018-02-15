@@ -44,52 +44,32 @@ public class A_Steffi_Exper implements PlugIn{
 
 			
 			
-			pathStr = experPaths[1];
+			//pathStr = experPaths[3];
 
 		
 		
-		// else {
-			// DirectoryChooser dc = new DirectoryChooser("Choose folder containing hemisegment folders.");
-			// pathStr = dc.getDirectory();
-		// }
+		int[] whichOnes = {0,1,2,3};
 		
-		
-		//Experiment exper = new Experiment(path);
-
-	
-	
-	
-		//IJ.log("py_path");
-		
-		
-		
+		for (int i = 0; i < whichOnes.length; i++) {
+				 
+			//ArrayList<String> headings = new ArrayList<String>(Arrays.asList("Y","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Y Scaled to Cell","Cross-sectional Area"));
 			
-		//exper.hemisegs.get(0).vl4.orthMsrments();
-		
-		// for (Hemisegment hemiseg : exper.hemisegs) {
-			// hemiseg.vl3.orthMsrments();
-			// hemiseg.vl4.orthMsrments();
+			File path = new File(experPaths[whichOnes[i]]);
+			String fileSuf = "y-area-thickness";
 			
-			// hemiseg.vl3.countNucPixels();
-			// hemiseg.vl4.countNucPixels();
+			String[] headings = {"Y","Y Scaled to Cell","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Cross-sectional Area","orth vol sum","stack vol sum","cropped stack vol sum","cropped stack vol sum2"};
 			
-			// hemiseg.vl3.nucsYScaled();
-			// hemiseg.vl4.nucsYScaled();
-		// } 
-		
-		//ArrayList<String> geoHeadings = new ArrayList<String>(Arrays.asList("Y","Area","Width","Height"));
-		ArrayList<String> headings = new ArrayList<String>(Arrays.asList("Y","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Y Scaled to Cell","Cross-sectional Area"));
-		
-		File path = new File(pathStr);
-
-		//Experiment e = Experiment.experConstructEverything(path,"y-area-thickness", headings);
-		
-		Experiment e = new Experiment(path);
-		e.testOnOneNuc();
+			Experiment e = Experiment.experConstructEverything(path, fileSuf, headings);
+			e.close();
+			e = null;
+			System.gc();
+			
+			//Experiment e = new Experiment(path);
+			//e.testOnOneNuc();
+		}
 		
 		
 		
-			//IJ.log("specCount = " + exper.specCount);
 	}
 	
 	public void close() {

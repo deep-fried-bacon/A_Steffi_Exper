@@ -124,12 +124,31 @@ public class Nucleus {
 			IJ.log(cell.hemiseg.name + " vl"+cell.vlNum + ": makeNucImps - no rois in nuc cross-section");
 			return;
 		}	
-		data.putAll(Functions.getRtRow(rt,index,"orthRoi"));
+		
+		Hashtable<String,MutableDouble> poop = Functions.getRtRow(rt,index,"orthRoi");
+		
+		for (String key : poop.keySet()) {
+			//IJ.log(key + " = " + poop.get(key));
+		}
+		
+		data.putAll(poop);
 		orthRoi = nucOrthOverlay.get(index);
 	}
 
 	
 	public void countOrthPixels () {
+		if (orthStack == null) {
+			/* exception */
+			IJ.log(fullId());
+			IJ.log("\tcountOrthPixels: orthStack = null");
+			return;
+		}
+		if (orthRoi == null) {
+			/* exception */
+			IJ.log(fullId());
+			IJ.log("\tcountOrthPixels: orthRoi = null");
+			return;
+		}
 		setCroppedOrthStack(Functions.cropStack(orthStack, orthRoi));
 		//orthStack.deleteRoi();
 		int pixelCount = 0;
@@ -178,16 +197,118 @@ public class Nucleus {
 	}
 	
 	
+	public void allSliceSums() {
+		sumSlicesOrthStack();
+		sumSlicesSubStack();
+		sumSlicesStack();
+	}
+	
+	
 	public void sumSlicesOrthStack() {
-		
+		if (orthStack == null) {
+			/* exception */
+			IJ.log(fullId());
+			IJ.log("\tsumSlicesOrthStack: orthStack = null");
+			return;
+		}
+		if (orthRoi == null) {
+			/* exception */
+			IJ.log(fullId());
+			IJ.log("\tsumSlicesOrthStack: orthRoi = null");
+			return;
+		}
 		ImagePlus orthStackCrop = Functions.cropStack(orthStack, orthRoi);
-		//orthStackCrop.setRoi(orthRoi);
+		
+		double sum = sumSlices(orthStackCrop, xCal);
+		if (sum == -1) return;
+
+		data.put("orth vol sum", new MutableDouble(sum));
+		
+		
+		//IJ.log("" + bounds);
+		
+		//IJ.log("width = " + data.get("orthRoi - Width"));
+		//IJ.log("height = " +  data.get("orthRoi - Height"));
+		//IJ.log("BX = " + data.get("orthRoi - BX"));
+		//IJ.log("BY = " + data.get("orthRoi - BY"));
+	
+		//for (int slice = 0; slice < orthStack.getStackSize(); slice++) {
+			
+		//}
+	}
+	
+	public void sumSlicesStack() {
+		
+		
+		double sum = sumSlices(stack, zCal);
+		if (sum == -1) return;
+
+		
+		data.put("stack vol sum", new MutableDouble(sum));
+	
+	}
+	
+	
+	public void sumSlicesSubStack() {
+		
+		//top = cell.hemiseg.cal.getRaw(
+		
+		if (orthRoi == null) {
+			/*exception*/
+			IJ.log(fullId());
+			IJ.log("orthRoi == null");
+			return;
+		}
+		Rectangle bounds = orthRoi.getBounds();
+		
+		int top = bounds.y + 1;
+		int bot = bounds.y + bounds.height;
+		
+		
+		Duplicator d = new Duplicator();
+		ImagePlus croppedStack = d.run(stack,top,bot);
+		
+		//croppedStack.show();
+		//orthThresh.setRoi(orthRoi);
+		//orthThresh.show();
+		
+		//IJ.log("top slice = " + top);
+		//IJ.log("bot slice = " + bot);
+	
+		double sum = sumSlices(croppedStack, zCal);
+		if (sum != -1) {
+			data.put("cropped stack vol sum", new MutableDouble(sum));
+		}
+		
+		top = top - 2;
+		if (top < 1) top = 1;
+		bot = bot + 2;
+		if (bot > stack.getStackSize()) bot = stack.getStackSize();
+		ImagePlus croppedStack2 = d.run(stack,top,bot);
+		double sum2 = sumSlices(croppedStack2, zCal);
+		
+		if (sum2 != -1) {
+			data.put("cropped stack vol sum2", new MutableDouble(sum2));
+		}
+		
+	
+	}
+	
+	
+	
+	public static double sumSlices(ImagePlus impStack, double scale) {
+		if (impStack == null) {
+			/* exception */
+			//IJ.log(fullId());
+			IJ.log("\tsumSlices: impStack = null");
+			return -1;
+		}
 		
 		ResultsTable rt = new ResultsTable();
 
-		for (int slice = 1; slice <= orthStackCrop.getStackSize(); slice++) {
-			orthStackCrop.setSlice(slice);
-			Analyzer a = new Analyzer(orthStackCrop, Measurements.ALL_STATS, rt);
+		for (int slice = 1; slice <= impStack.getStackSize(); slice++) {
+			impStack.setSlice(slice);
+			Analyzer a = new Analyzer(impStack, (Measurements.AREA|Measurements.AREA_FRACTION), rt);
 			//Analyzer a = new Analyzer(orthStackCrop, Measurements.AREA_FRACTION, rt);
 		
 		
@@ -201,32 +322,15 @@ public class Nucleus {
 		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
 		
 		double sum = 0;
+		
+		//IJ.log("percCol.length = " + percCol.length);
 		for (int i = 0; i < percCol.length; i++) {
-			sum += totArea * percCol[i] * xCal * (1/100);
+			sum += (totArea * percCol[i] * scale)/100;
 		}
+		//IJ.log("sum = " +  sum);
+
 		
-		data.put("orth vol sum", new MutableDouble(sum));
-		
-		Rectangle bounds = orthRoi.getBounds();
-		IJ.log("" + bounds);
-	
-		//for (int slice = 0; slice < orthStack.getStackSize(); slice++) {
-			
-		//}
-	}
-	
-	public void sumSlicesStack() {
-		
-		//top = cell.hemiseg.cal.getRaw(
-		
-	
-	
-	
-	
-	
-	
-	
-	
+		return sum;
 	}
 	
 	
