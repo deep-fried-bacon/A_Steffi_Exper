@@ -13,6 +13,8 @@ import ij.process.*;
 
 
 import java.util.*;
+import java.awt.*;
+
 
 import jsteffi.utilities.*;
 
@@ -173,6 +175,58 @@ public class Nucleus {
 		MutableDouble outY = cell.yScaled(inY2);
 		data.put("Y Scaled to Cell",outY);
 			
+	}
+	
+	
+	public void sumSlicesOrthStack() {
+		
+		ImagePlus orthStackCrop = Functions.cropStack(orthStack, orthRoi);
+		//orthStackCrop.setRoi(orthRoi);
+		
+		ResultsTable rt = new ResultsTable();
+
+		for (int slice = 1; slice <= orthStackCrop.getStackSize(); slice++) {
+			orthStackCrop.setSlice(slice);
+			Analyzer a = new Analyzer(orthStackCrop, Measurements.ALL_STATS, rt);
+			//Analyzer a = new Analyzer(orthStackCrop, Measurements.AREA_FRACTION, rt);
+		
+		
+			a.measure();
+		}
+		//rt.show("adf");
+		
+		//orthStackCrop.show();
+		
+		double[] percCol = rt.getColumnAsDoubles(rt.getColumnIndex("%Area"));
+		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
+		
+		double sum = 0;
+		for (int i = 0; i < percCol.length; i++) {
+			sum += totArea * percCol[i] * xCal * (1/100);
+		}
+		
+		data.put("orth vol sum", new MutableDouble(sum));
+		
+		Rectangle bounds = orthRoi.getBounds();
+		IJ.log("" + bounds);
+	
+		//for (int slice = 0; slice < orthStack.getStackSize(); slice++) {
+			
+		//}
+	}
+	
+	public void sumSlicesStack() {
+		
+		//top = cell.hemiseg.cal.getRaw(
+		
+	
+	
+	
+	
+	
+	
+	
+	
 	}
 	
 	

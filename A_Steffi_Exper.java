@@ -44,7 +44,7 @@ public class A_Steffi_Exper implements PlugIn{
 
 			
 			
-			pathStr = experPaths[0];
+			pathStr = experPaths[1];
 
 		
 		
@@ -82,7 +82,10 @@ public class A_Steffi_Exper implements PlugIn{
 		
 		File path = new File(pathStr);
 
-		Experiment e = Experiment.experConstructEverything(path,"y-area-thickness", headings);
+		//Experiment e = Experiment.experConstructEverything(path,"y-area-thickness", headings);
+		
+		Experiment e = new Experiment(path);
+		e.testOnOneNuc();
 		
 		
 		

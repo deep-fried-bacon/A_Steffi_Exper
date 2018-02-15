@@ -294,13 +294,20 @@ public class Experiment {
 	}
 	
 	
-	
+	public void testOnOneNuc() {
+		nucs.get(0).makeNucImps();
+		nucs.get(0).countOrthPixels();
+		nucs.get(0).yScaled();
+		nucs.get(0).sumSlicesOrthStack();
+	}
 	
 	public void runEverything() {
 		makeNucImps();
 		countNucOrthPixels();
 		nucYScaled();
 	}
+	
+	
 	
 	public void makeNucImps() {
 		IJ.log("making nuc cross-sections...");
@@ -321,6 +328,9 @@ public class Experiment {
 			nuc.yScaled();
 		}
 	}
+	
+	
+	
 	
 	
 	
