@@ -85,6 +85,9 @@ public class Functions {
 		// }
 		outImp.setStack(outStack);
 
+		//IJ.log("channels.length = " + channels.length);
+		outImp.setOpenAsHyperStack(true);
+
 		outImp.setDimensions(channels.length,xLength,1);
 
 		return outImp;

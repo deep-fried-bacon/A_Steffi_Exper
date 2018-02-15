@@ -122,7 +122,7 @@ public class Cell {
 	
 	
 	
-	 public void makeCellXOrthView() {
+	public void makeCellOrthView() {
 		if (cellHyp == null) {
 			makeCellHyp();
 		}
@@ -130,6 +130,72 @@ public class Cell {
 		this.cellOrthStack = Functions.verticalCrossSection(cellHyp, null);
 	}
 	
+	public void makeJustCellOrthView() {
+		if (cellHyp == null) {
+			makeCellHyp();
+		}
+		int[] poop = {hemiseg.exper.channels.get("Cell")};
+		//IJ.log("hemiseg.exper.channels.get(\"Cell\") = " + hemiseg.exper.channels.get("Cell"));
+		this.cellOrthStack = Functions.verticalCrossSection(cellHyp, poop);
+	}
+	
+	public void thickness() {
+		ArrayList<Integer> allCounts = new ArrayList<Integer>();
+		int gaps = 0;
+		makeJustCellOrthView();
+		
+		for (int slice = 0; slice < cellOrthStack.getNSlices(); slice++) {
+			cellOrthStack.setSlice(slice);
+			ByteProcessor bp = (ByteProcessor)cellOrthStack.getProcessor();
+			byte[] pixels = (byte[])bp.getPixels();
+			
+			int xLength = cellOrthStack.getWidth();
+			int yLength = cellOrthStack.getHeight();
+			
+			for (int x = 0; x < xLength; x++) {
+				int count = 0;
+				for (int y = 0; y < yLength; y++) {
+					boolean started = false;
+					boolean stopped = false;
+					
+					int pix = pixels[y*xLength + x]&0xff;
+					if (pix > 15) {
+						if (stopped) gaps++;
+						else {
+							count++;
+							started = true;
+						}
+					
+					}
+					else if (started) stopped = true;
+				}
+				if (count > 0) allCounts.add(count);
+				
+			}
+			
+		}
+		double[] temp = arrayStats(allCounts);
+		IJ.log("" + temp[0] + "," + temp[1] + "," + temp[2] + "," + gaps);
+		// IJ.log("min = " + temp[0]);
+		// IJ.log("max = " + temp[1]);
+		// IJ.log("mean = " + temp[2]);
+		// IJ.log("gap count = " + gaps);
+	}
+	
+	public double[] arrayStats(ArrayList<Integer> inArr) {
+		double min = inArr.get(0).intValue();
+		double max = inArr.get(0).intValue();
+		double sum = 0;
+		for (int i = 0; i < inArr.size(); i++) {
+			double num = inArr.get(i).intValue();
+			if (num > max) max = num;
+			else if (num < min) min = num;
+			sum += num;
+		}
+		double mean = sum/inArr.size();
+		double[] outArr = {min,max,mean};
+		return outArr;
+	}
 	
 	
 	

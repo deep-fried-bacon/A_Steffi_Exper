@@ -48,7 +48,8 @@ public class A_Steffi_Exper implements PlugIn{
 
 		
 		
-		int[] whichOnes = {0,1,2,3};
+		//int[] whichOnes = {0,1,2,3};
+		int[] whichOnes = {1};
 		
 		for (int i = 0; i < whichOnes.length; i++) {
 				 
@@ -59,13 +60,13 @@ public class A_Steffi_Exper implements PlugIn{
 			
 			String[] headings = {"Y","Y Scaled to Cell","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Cross-sectional Area","orth vol sum","stack vol sum","cropped stack vol sum","cropped stack vol sum2"};
 			
-			Experiment e = Experiment.experConstructEverything(path, fileSuf, headings);
-			e.close();
-			e = null;
-			System.gc();
+			// Experiment e = Experiment.experConstructEverything(path, fileSuf, headings);
+			// e.close();
+			// e = null;
+			// System.gc();
 			
-			//Experiment e = new Experiment(path);
-			//e.testOnOneNuc();
+			Experiment e = new Experiment(path);
+			e.forEachCell();
 		}
 		
 		

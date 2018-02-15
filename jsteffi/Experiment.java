@@ -250,6 +250,34 @@ public class Experiment {
 		
 	}
 	
+	public void forEachCell() {
+		IJ.log("min,max,mean,gap count");
+
+		for (Cell c : cells) {
+			c.thickness();
+		}
+	}
+	public void testOnOneCell() {
+		Cell c = cells.get(0);
+		//c.makeCellOrthView();
+		//c.makeJustCellOrthView();
+		//c.cellOrthStack.show();
+		
+		c.thickness();
+		
+		
+		//nucs.get(0).makeNucImps();
+		//nucs.get(0).countOrthPixels();
+		//nucs.get(0).yScaled();
+		//nucs.get(0).sumSlicesOrthStack();
+		//nucs.get(0).sumSlicesStack();
+		//nucs.get(0).allSliceSums();
+
+		
+	}
+	
+	
+	
 	public void runEverything() {
 		makeNucImps();
 		countNucOrthPixels();
