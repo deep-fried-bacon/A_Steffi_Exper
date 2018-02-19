@@ -219,7 +219,7 @@ public class Nucleus {
 		}
 		ImagePlus orthStackCrop = Functions.cropStack(orthStack, orthRoi);
 		
-		double sum = sumSlices(orthStackCrop, xCal);
+		double sum = Functions.sumSlices(orthStackCrop, xCal);
 		if (sum == -1) return;
 
 		data.put("orth vol sum", new MutableDouble(sum));
@@ -240,7 +240,7 @@ public class Nucleus {
 	public void sumSlicesStack() {
 		
 		
-		double sum = sumSlices(stack, zCal);
+		double sum = Functions.sumSlices(stack, zCal);
 		if (sum == -1) return;
 
 		
@@ -275,7 +275,7 @@ public class Nucleus {
 		//IJ.log("top slice = " + top);
 		//IJ.log("bot slice = " + bot);
 	
-		double sum = sumSlices(croppedStack, zCal);
+		double sum = Functions.sumSlices(croppedStack, zCal);
 		if (sum != -1) {
 			data.put("cropped stack vol sum", new MutableDouble(sum));
 		}
@@ -285,7 +285,7 @@ public class Nucleus {
 		bot = bot + 2;
 		if (bot > stack.getStackSize()) bot = stack.getStackSize();
 		ImagePlus croppedStack2 = d.run(stack,top,bot);
-		double sum2 = sumSlices(croppedStack2, zCal);
+		double sum2 = Functions.sumSlices(croppedStack2, zCal);
 		
 		if (sum2 != -1) {
 			data.put("cropped stack vol sum2", new MutableDouble(sum2));
@@ -296,42 +296,7 @@ public class Nucleus {
 	
 	
 	
-	public static double sumSlices(ImagePlus impStack, double scale) {
-		if (impStack == null) {
-			/* exception */
-			//IJ.log(fullId());
-			IJ.log("\tsumSlices: impStack = null");
-			return -1;
-		}
-		
-		ResultsTable rt = new ResultsTable();
 
-		for (int slice = 1; slice <= impStack.getStackSize(); slice++) {
-			impStack.setSlice(slice);
-			Analyzer a = new Analyzer(impStack, (Measurements.AREA|Measurements.AREA_FRACTION), rt);
-			//Analyzer a = new Analyzer(orthStackCrop, Measurements.AREA_FRACTION, rt);
-		
-		
-			a.measure();
-		}
-		//rt.show("adf");
-		
-		//orthStackCrop.show();
-		
-		double[] percCol = rt.getColumnAsDoubles(rt.getColumnIndex("%Area"));
-		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
-		
-		double sum = 0;
-		
-		//IJ.log("percCol.length = " + percCol.length);
-		for (int i = 0; i < percCol.length; i++) {
-			sum += (totArea * percCol[i] * scale)/100;
-		}
-		//IJ.log("sum = " +  sum);
-
-		
-		return sum;
-	}
 	
 	
 	

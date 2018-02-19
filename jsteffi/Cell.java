@@ -28,7 +28,7 @@ public class Cell {
 	public ArrayList<Double> roiY = new ArrayList<Double>(0);
 
 	//public 
-	//public Hashtable<String,MutableDouble> geoData = new Hashtable<String,MutableDouble>();
+	public Hashtable<String,MutableDouble> data = new Hashtable<String,MutableDouble>();
 	//Rectangle bounds =
 	
 	//public boolean nucsLoaded = false;
@@ -53,10 +53,23 @@ public class Cell {
 		
 		this.roiPath = roiPath;
 		roi = openRoiCsv(roiPath, cal);
-		
+		makeCellHyp();
+			
+		makeGeoData();
 		// Hemisegment loads nuc right after
-		//Rectangle bounds
 		
+	}
+	
+	
+	public void makeGeoData() {
+		cellHyp.setRoi(roi);
+		ResultsTable rt = new ResultsTable();
+		Analyzer a = new Analyzer(cellHyp, Hemisegment.GEO, rt);
+		a.measure();
+		
+		data = Functions.getRtRow(rt,0);
+
+
 	}
 		
 	public Roi openRoiCsv(File roiCsvPath, Calibration cal) {
@@ -80,6 +93,9 @@ public class Cell {
 			float[] yF = ArrLisDouToArrFlo(roiY);
 			
 			return new PolygonRoi(xF,yF,2);
+			
+			
+			
 		}
 		catch (FileNotFoundException e) {
 			/*** exception ***/
@@ -92,9 +108,6 @@ public class Cell {
 	}	
 		
 	public void makeCellHyp() {
-		//hemiseg.hyp.setRoi(roi);
-		//cellHyp = hemiseg.hyp.duplicate();
-		//hemiseg.hyp.deleteRoi();
 		
 		cellHyp = Functions.cropStack(hemiseg.hyp, roi);
 		
@@ -135,7 +148,6 @@ public class Cell {
 			makeCellHyp();
 		}
 		int[] poop = {hemiseg.exper.channels.get("Cell")};
-		//IJ.log("hemiseg.exper.channels.get(\"Cell\") = " + hemiseg.exper.channels.get("Cell"));
 		this.cellOrthStack = Functions.verticalCrossSection(cellHyp, poop);
 	}
 	
@@ -175,11 +187,15 @@ public class Cell {
 			
 		}
 		double[] temp = arrayStats(allCounts);
-		IJ.log("" + temp[0] + "," + temp[1] + "," + temp[2] + "," + gaps);
-		// IJ.log("min = " + temp[0]);
-		// IJ.log("max = " + temp[1]);
-		// IJ.log("mean = " + temp[2]);
-		// IJ.log("gap count = " + gaps);
+		
+		data.put("thickness min", new MutableDouble(temp[0]));
+		data.put("thickness max", new MutableDouble(temp[1]));
+		data.put("thickness mean", new MutableDouble(temp[2]));
+		data.put("thickness gap count", new MutableDouble(gaps));
+		double volume = data.get("Area").get() * temp[2];
+		data.put("Volume", new MutableDouble(volume));
+		
+		
 	}
 	
 	public double[] arrayStats(ArrayList<Integer> inArr) {
@@ -197,6 +213,21 @@ public class Cell {
 		return outArr;
 	}
 	
+	
+	public void makeTotalAV() {
+		double nucTotalArea = 0;
+		double nucTotalVolume = 0;
+		for (Nucleus nuc : nucs) {
+			MutableDouble temp = nuc.data.get("Area");
+			if (temp != null) nucTotalArea += temp.get();
+			
+			MutableDouble temp2 = nuc.data.get("cropped stack vol sum2");
+			if (temp2 != null) nucTotalVolume += temp2.get();
+		}
+		
+		data.put("Nuc Total Area", new MutableDouble(nucTotalArea));
+		data.put("Nuc Total Volume", new MutableDouble(nucTotalVolume));
+	}
 	
 	
 	public MutableDouble yScaled(MutableDouble num) {
@@ -218,8 +249,7 @@ public class Cell {
 		double height = bounds.height;
 		double start = bounds.y;
 		
-		//double temp = num.get();
-		//temp = num - y;
+		
 		double yPointTemp = yPoint - start;
 		double yPointScaled = yPointTemp/height;
 		
@@ -299,7 +329,6 @@ public class Cell {
 		temp += ("\nroiX: " + roiX);
 		temp += ("\nroiY: " + roiY);
 		
-		//temp += ("\nnucsLoaded: " + nucsLoaded);
 		
 		temp += ("\nnucs: " + nucs);
 		temp += ("\nnucCount: " + nucCount);

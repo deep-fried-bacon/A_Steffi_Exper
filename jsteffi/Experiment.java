@@ -167,6 +167,63 @@ public class Experiment {
 	
 
 	
+	public boolean exportCellData(String fileSuf, String[] headings) {
+		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
+		BufferedWriter writer = null;
+		
+		try {
+			writer = new BufferedWriter(new FileWriter(outCsv));
+			String labels = "Hemisegment,Cell,";
+			
+			for (int i = 0; i < headings.length; i++) {
+				labels += (headings[i] + ",");
+			}
+			
+		
+			writer.write(labels+"\n");
+			
+			
+			for (Cell c : cells) {
+				String temp = c.hemiseg.name + ",vl"+c.vlNum + ",";
+				for (int i = 0; i < headings.length; i++) {
+					String heading2 = headingRename(headings[i]);
+					if (c.data.containsKey(heading2)) {
+						MutableDouble val = c.data.get(heading2);
+						if (val != null) {
+							temp += (c.data.get(heading2));
+						}
+					}
+					temp += ",";
+				}
+				writer.write(temp + "\n");
+					
+			}
+			
+			
+			writer.close();
+			return true;
+		}
+		catch (FileNotFoundException e) {
+			/** deal with exception appropriately **/
+			IJ.log("FileNotFoundException in Experiment.exportCellData");
+			return false;
+		}
+		catch (IOException e) {
+			/** deal with exception appropriately **/
+			IJ.log("IOException in Experiment.exportCellData");
+			return false;
+		}
+
+	}
+		
+		
+		
+		
+		
+		
+		
+	
+	
 	
 	
 	public boolean exportNucData(String fileSuf, String[] headings) {
@@ -251,11 +308,17 @@ public class Experiment {
 	}
 	
 	public void forEachCell() {
-		IJ.log("min,max,mean,gap count");
-
+		//IJ.log("min,max,mean,gap count");
+		makeNucImps();
+		allSliceSums();
+		
 		for (Cell c : cells) {
 			c.thickness();
+			c.makeTotalAV();
+			
 		}
+		
+		
 	}
 	public void testOnOneCell() {
 		Cell c = cells.get(0);

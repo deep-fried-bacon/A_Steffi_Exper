@@ -56,17 +56,20 @@ public class A_Steffi_Exper implements PlugIn{
 			//ArrayList<String> headings = new ArrayList<String>(Arrays.asList("Y","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Y Scaled to Cell","Cross-sectional Area"));
 			
 			File path = new File(experPaths[whichOnes[i]]);
-			String fileSuf = "y-area-thickness";
+			String nucFileSuf = "y-area-thickness";
 			
-			String[] headings = {"Y","Y Scaled to Cell","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Cross-sectional Area","orth vol sum","stack vol sum","cropped stack vol sum","cropped stack vol sum2"};
+			String[] nucHeadings = {"Y","Y Scaled to Cell","Area","Thickness(minFeret)","Thickness(Height)", "vol pix count", "vol pix sum","Cross-sectional Area","orth vol sum","stack vol sum","cropped stack vol sum","cropped stack vol sum2"};
 			
 			// Experiment e = Experiment.experConstructEverything(path, fileSuf, headings);
 			// e.close();
 			// e = null;
 			// System.gc();
 			
+			String cellFileSuf = "cell-vol-stuff";
+			String[] cellHeadings = {"Area","Total Nuc Area","Volume","Total Nuc Volume","thickness mean"};
 			Experiment e = new Experiment(path);
 			e.forEachCell();
+			e.exportCellData(cellFileSuf,cellHeadings);
 		}
 		
 		
