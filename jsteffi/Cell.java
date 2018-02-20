@@ -63,6 +63,7 @@ public class Cell {
 	
 	public void makeGeoData() {
 		cellHyp.setRoi(roi);
+		cellHyp.setC(hemiseg.exper.channels.get("Cell"));
 		ResultsTable rt = new ResultsTable();
 		Analyzer a = new Analyzer(cellHyp, Hemisegment.GEO, rt);
 		a.measure();
@@ -114,6 +115,7 @@ public class Cell {
 		PolygonRoi tempRoi = new PolygonRoi(roi.getFloatPolygon(),2);
 		cellHyp.setRoi(tempRoi);
 		tempRoi.setLocation(0,0);
+		roi = tempRoi;
 		
 		ImagePlus temp = WindowManager.getTempCurrentImage();
 		WindowManager.setTempCurrentImage(cellHyp);
@@ -152,7 +154,7 @@ public class Cell {
 	}
 	
 	public void thickness() {
-		ArrayList<Integer> allCounts = new ArrayList<Integer>();
+		ArrayList<Double> allCounts = new ArrayList<Double>();
 		int gaps = 0;
 		makeJustCellOrthView();
 		
@@ -181,7 +183,7 @@ public class Cell {
 					}
 					else if (started) stopped = true;
 				}
-				if (count > 0) allCounts.add(count);
+				if (count > 0) allCounts.add(hemiseg.cal.getZ(count));
 				
 			}
 			
@@ -198,7 +200,16 @@ public class Cell {
 		
 	}
 	
-	public double[] arrayStats(ArrayList<Integer> inArr) {
+	
+	public void volume2() {
+		cellHyp.setC(hemiseg.exper.channels.get("Cell"));
+
+		double sum = Functions.sumSlices(cellHyp, hemiseg.cal.pixelDepth);
+		data.put("Volume 2", new MutableDouble(sum));
+		
+	}
+	
+	public double[] arrayStats(ArrayList<Double> inArr) {
 		double min = inArr.get(0).intValue();
 		double max = inArr.get(0).intValue();
 		double sum = 0;
@@ -225,6 +236,9 @@ public class Cell {
 			if (temp2 != null) nucTotalVolume += temp2.get();
 		}
 		
+		IJ.log("" + this);
+		IJ.log("nucTotalArea = " + nucTotalArea);
+		IJ.log("nucTotalVolume = " + nucTotalVolume);
 		data.put("Nuc Total Area", new MutableDouble(nucTotalArea));
 		data.put("Nuc Total Volume", new MutableDouble(nucTotalVolume));
 	}

@@ -49,7 +49,7 @@ public class A_Steffi_Exper implements PlugIn{
 		
 		
 		//int[] whichOnes = {0,1,2,3};
-		int[] whichOnes = {1};
+		int[] whichOnes = {0,2};
 		
 		for (int i = 0; i < whichOnes.length; i++) {
 				 
@@ -66,7 +66,7 @@ public class A_Steffi_Exper implements PlugIn{
 			// System.gc();
 			
 			String cellFileSuf = "cell-vol-stuff";
-			String[] cellHeadings = {"Area","Total Nuc Area","Volume","Total Nuc Volume","thickness mean"};
+			String[] cellHeadings = {"Area","Nuc Total Area","Volume", "Volume 2","Nuc Total Volume","thickness mean"};
 			Experiment e = new Experiment(path);
 			e.forEachCell();
 			e.exportCellData(cellFileSuf,cellHeadings);

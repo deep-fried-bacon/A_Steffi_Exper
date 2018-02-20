@@ -314,7 +314,9 @@ public class Experiment {
 		
 		for (Cell c : cells) {
 			c.thickness();
+			c.volume2();
 			c.makeTotalAV();
+			
 			
 		}
 		

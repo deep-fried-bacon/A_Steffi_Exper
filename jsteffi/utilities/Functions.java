@@ -284,7 +284,132 @@ public class Functions {
 	
 	}
 	
+	public Hashtable<String, MutableDouble> avgThickness(ImagePlus orthImp) {
+		ArrayList<Integer> allCounts = new ArrayList<Integer>();
+		int gaps = 0;
+		//makeJustCellOrthView();
+		
+		for (int slice = 0; slice < orthImp.getNSlices(); slice++) {
+			orthImp.setSlice(slice);
+			ByteProcessor bp = (ByteProcessor)orthImp.getProcessor();
+			byte[] pixels = (byte[])bp.getPixels();
+			
+			int xLength = orthImp.getWidth();
+			int yLength = orthImp.getHeight();
+			
+			for (int x = 0; x < xLength; x++) {
+				int count = 0;
+				for (int y = 0; y < yLength; y++) {
+					boolean started = false;
+					boolean stopped = false;
+					
+					int pix = pixels[y*xLength + x]&0xff;
+					if (pix > 15) {
+						if (stopped) gaps++;
+						else {
+							count++;
+							started = true;
+						}
+					
+					}
+					else if (started) stopped = true;
+				}
+				if (count > 0) allCounts.add(count);
+				
+			}
+			
+		}
+		//double[] temp = arrayStats(allCounts);
+		Hashtable<String, MutableDouble> outTable = arrayStats(allCounts, "Thickness");
+		outTable.put("avgThickness gap count", new MutableDouble(gaps));
+		return outTable;
+		
+		//data.put("thickness min", new MutableDouble(temp[0]));
+		//data.put("thickness max", new MutableDouble(temp[1]));
+		//data.put("thickness mean", new MutableDouble(temp[2]));
+		//data.put("thickness gap count", new MutableDouble(gaps));
+		//double volume = data.get("Area").get() * temp[2];
+		//data.put("Volume", new MutableDouble(volume));
+		
+		
 	
+		
+		
+	}
+	
+	public Hashtable<String, MutableDouble> arrayStats(ArrayList<Integer> inArr) {
+		double min = inArr.get(0).intValue();
+		double max = inArr.get(0).intValue();
+		double sum = 0;
+		for (int i = 0; i < inArr.size(); i++) {
+			double num = inArr.get(i).intValue();
+			if (num > max) max = num;
+			else if (num < min) min = num;
+			sum += num;
+		}
+		double mean = sum/inArr.size();
+		
+		Hashtable<String, MutableDouble> outTable = new Hashtable<String,MutableDouble>(3);
+		outTable.put("Mean", new MutableDouble(mean));
+		outTable.put("Min", new MutableDouble(min));
+		outTable.put("Max", new MutableDouble(max));
+		return outTable;
+		//double[] outArr = {min,max,mean};
+		//return outArr;
+	}
+	
+	
+	public Hashtable<String,MutableDouble> arrayStats(ArrayList<Integer> inArr, String prefix) {
+		double min = inArr.get(0).intValue();
+		double max = inArr.get(0).intValue();
+		double sum = 0;
+		for (int i = 0; i < inArr.size(); i++) {
+			double num = inArr.get(i).intValue();
+			if (num > max) max = num;
+			else if (num < min) min = num;
+			sum += num;
+		}
+		double mean = sum/inArr.size();
+		
+		Hashtable<String,MutableDouble> outTable = new Hashtable<String,MutableDouble>(3);
+		outTable.put(prefix + " - Mean", new MutableDouble(mean));
+		outTable.put(prefix + " - Min", new MutableDouble(min));
+		outTable.put(prefix + " - Max", new MutableDouble(max));
+		return outTable;
+		//double[] outArr = {min,max,mean};
+		//return outArr;
+	}
+	
+	public static double sumSlices(ImagePlus impStack, double scale) {
+		if (impStack == null) {
+			/* exception */
+			IJ.log("\tsumSlices: impStack = null");
+			return -1;
+		}
+		
+		ResultsTable rt = new ResultsTable();
+
+		for (int slice = 1; slice <= impStack.getStackSize(); slice++) {
+			impStack.setSlice(slice);
+			Analyzer a = new Analyzer(impStack, (Measurements.AREA|Measurements.AREA_FRACTION), rt);
+	
+		
+			a.measure();
+		}
+	
+		
+		double[] percCol = rt.getColumnAsDoubles(rt.getColumnIndex("%Area"));
+		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
+		
+		double sum = 0;
+		
+		for (int i = 0; i < percCol.length; i++) {
+			sum += (totArea * percCol[i] * scale)/100;
+		}
+
+		
+		return sum;
+	}
 	
 	//from Hemisegment
 	
