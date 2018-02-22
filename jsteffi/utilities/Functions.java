@@ -25,7 +25,6 @@ public class Functions {
 		if channels == null, uses all channels
 		*/
 	public static ImagePlus verticalCrossSection(ImagePlus imp, int[] channels) {
-		
 		if (imp == null) return null;
 		if (channels == null) {
 			channels = new int[imp.getNChannels()];
@@ -39,20 +38,13 @@ public class Functions {
 		int xLength = imp.getDimensions()[0];
 		int yLength = imp.getDimensions()[1];
 		
-		//int staticChannelCount = imp.getDimensions()[2];
 		int zLength = imp.getDimensions()[3];
 		
-		
-		//ImageStack[] outStacks = new ImageStack[channels.length];
 		ImageStack outStack = new ImageStack(yLength, zLength, channels.length*xLength);
 		ImagePlus outImp = new ImagePlus();
-		//outImp.setStack(outStack);
-		//for (int channel = 1; channel <= staticChannelCount; channel++) {
-			
+		
 		for (int i = 0; i < channels.length; i++) {
 			int channel = channels[i];
-			//ImageStack sliceHolder = new ImageStack(yLength,zLength);
-			
 			for (int x = 0; x < xLength; x++) {
 				byte[] xSlice = new byte[yLength*zLength];
 				
@@ -65,37 +57,16 @@ public class Functions {
 						y++;
 					}
 				}
-				
-				//ByteProcessor bp = new ByteProcessor(yLength,zLength,xSlice);
-				//sliceHolder.addSlice(bp);
-				//outStack.setPixels(xSlice,outImp.getStackIndex(channel+1,x+1,1));
-				//outStack.setPixels(xSlice,outImp.getStackIndex(channel+1,x+1,1));
-				outStack.setPixels(xSlice,x*channels.length+i+1);
-
-				
+				outStack.setPixels(xSlice,x*channels.length+i+1);			
 			}
-			//outStacks[i] = (sliceHolder.duplicate());
 		}			
 		
-		
-		//ImagePlus[] outImps = new ImagePlus[outStacks.length];
-		// for (int i = 0; i < outImps.length; i++) {
-			// ImagePlus temp = new ImagePlus((""+(i)), outStacks[i]);
-			// outImps[i] = temp.duplicate();
-		// }
 		outImp.setStack(outStack);
-
-		//IJ.log("channels.length = " + channels.length);
 		outImp.setOpenAsHyperStack(true);
-
 		outImp.setDimensions(channels.length,xLength,1);
 
 		return outImp;
 	}	
-	
-	
-	
-	
 	
 	/**
 		if channels == null, uses all channels
@@ -214,33 +185,29 @@ public class Functions {
 	}
 
 	
-	// returns a duplicate
+	/** returns a duplicate imp, doesn't change original image */
 	public static ImagePlus cropStack(ImagePlus imp, Roi r) {
 		imp.setRoi(r);
-		//IJ.log("imp.getNChannels
 		ImagePlus outImp = imp.duplicate();
 		imp.deleteRoi();
-		//IJ.log
 		return outImp;
 	}
 
-	
-	
 	/* z-Projection */
 		//setOrth((new ZProjector()).run(getOrthStack(),"max"));
-		
 	
-	
-	/* works on both a single image or the current slice of a stack */
+	/** works on both a single image or the current slice of a stack 
+		makes a duplicate image, doesn't change original */
 	public static ImagePlus autoThresholdSlice(ImagePlus imp, String method) {
-	
 		Auto_Threshold at = new Auto_Threshold();
 		Object[] temp = at.exec(imp, method, false, false, true, false, false, false);
 		ImagePlus outImp = (ImagePlus)temp[1];
 		return outImp;
 	}
 	
-	/* sets the current slice */
+	/** sets the current slice of original image, 
+		otherwise leaves original  image untouched
+		returns a duplicate image */
 	public static ImagePlus autoThresholdSlice(ImagePlus imp, String method, int slice) {
 		/* check if slice <= stackSize() */
 		imp.setSlice(slice);
@@ -251,29 +218,21 @@ public class Functions {
 		
 	}
 	
-	
-	
-	// untested!!!
+	/** untested!!! */
 	public static ImagePlus autoThresholdStack(ImagePlus imp, String method) {
 		ImagePlus outImp = imp.duplicate();
 		Auto_Threshold at = new Auto_Threshold();
 		for (int k = 1; k <= outImp.getStackSize(); k++){
 			outImp.setSlice(k);
-			//Object[] temp = exec(outImp, method, false, false, true, false, false, false);
 			at.exec(outImp, method, false, false, true, false, false, false);
-			//if (((Integer) result[0]) == -1) success = false;// the threshold existed
 		}
 		return outImp;
-		
 	}
-		
-	// as of yet, untested!!!
+	
+	/** Analyze Particle command */
 	public static Overlay particleAnalyze(ImagePlus imp, int msrments, ResultsTable rt) {
-		/* Particle Analyzer */
 		imp.setOverlay(null);
 		rt.reset();
-		//ResultsTable rt
-		//int msr = Measurements.FERET + Measurements.AREA + Measurements.CENTROID + Measurements.RECT;
 		ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_OVERLAY_OUTLINES, msrments, rt, 0, Double.POSITIVE_INFINITY);
 		
 		pa.analyze(imp);
@@ -281,13 +240,12 @@ public class Functions {
 		imp.setOverlay(null);
 		
 		return outOverlay;
-	
 	}
 	
-	public Hashtable<String, MutableDouble> avgThickness(ImagePlus orthImp) {
+	/** untested modified version of cell.thickness() */
+	public static Hashtable<String, MutableDouble> avgThickness(ImagePlus orthImp) {
 		ArrayList<Integer> allCounts = new ArrayList<Integer>();
 		int gaps = 0;
-		//makeJustCellOrthView();
 		
 		for (int slice = 0; slice < orthImp.getNSlices(); slice++) {
 			orthImp.setSlice(slice);
@@ -319,25 +277,13 @@ public class Functions {
 			}
 			
 		}
-		//double[] temp = arrayStats(allCounts);
-		Hashtable<String, MutableDouble> outTable = arrayStats(allCounts, "Thickness");
-		outTable.put("avgThickness gap count", new MutableDouble(gaps));
-		return outTable;
-		
-		//data.put("thickness min", new MutableDouble(temp[0]));
-		//data.put("thickness max", new MutableDouble(temp[1]));
-		//data.put("thickness mean", new MutableDouble(temp[2]));
-		//data.put("thickness gap count", new MutableDouble(gaps));
-		//double volume = data.get("Area").get() * temp[2];
-		//data.put("Volume", new MutableDouble(volume));
-		
-		
-	
-		
-		
+		Hashtable<String, MutableDouble> outHashtable = arrayStats(allCounts, "Thickness");
+		outHashtable.put("avgThickness gap count", new MutableDouble(gaps));
+		return outHashtable;		
 	}
 	
-	public Hashtable<String, MutableDouble> arrayStats(ArrayList<Integer> inArr) {
+	/** untested modified version of cell.arrayStats() */
+	public static Hashtable<String, MutableDouble> arrayStats(ArrayList<Integer> inArr) {
 		double min = inArr.get(0).intValue();
 		double max = inArr.get(0).intValue();
 		double sum = 0;
@@ -349,16 +295,15 @@ public class Functions {
 		}
 		double mean = sum/inArr.size();
 		
-		Hashtable<String, MutableDouble> outTable = new Hashtable<String,MutableDouble>(3);
-		outTable.put("Mean", new MutableDouble(mean));
-		outTable.put("Min", new MutableDouble(min));
-		outTable.put("Max", new MutableDouble(max));
-		return outTable;
-		//double[] outArr = {min,max,mean};
-		//return outArr;
+		Hashtable<String, MutableDouble> outHashtable = new Hashtable<String,MutableDouble>(3);
+		outHashtable.put("Mean", new MutableDouble(mean));
+		outHashtable.put("Min", new MutableDouble(min));
+		outHashtable.put("Max", new MutableDouble(max));
+		return outHashtable;
 	}
 	
-	
+	/** untested modified version of cell.arrayStats(),
+		with added prefix option */
 	public Hashtable<String,MutableDouble> arrayStats(ArrayList<Integer> inArr, String prefix) {
 		double min = inArr.get(0).intValue();
 		double max = inArr.get(0).intValue();
@@ -371,19 +316,17 @@ public class Functions {
 		}
 		double mean = sum/inArr.size();
 		
-		Hashtable<String,MutableDouble> outTable = new Hashtable<String,MutableDouble>(3);
-		outTable.put(prefix + " - Mean", new MutableDouble(mean));
-		outTable.put(prefix + " - Min", new MutableDouble(min));
-		outTable.put(prefix + " - Max", new MutableDouble(max));
-		return outTable;
-		//double[] outArr = {min,max,mean};
-		//return outArr;
+		Hashtable<String,MutableDouble> outHashtable = new Hashtable<String,MutableDouble>(3);
+		outHashtable.put(prefix + " - Mean", new MutableDouble(mean));
+		outHashtable.put(prefix + " - Min", new MutableDouble(min));
+		outHashtable.put(prefix + " - Max", new MutableDouble(max));
+		return outHashtable;
 	}
 	
 	public static double sumSlices(ImagePlus impStack, double scale) {
 		if (impStack == null) {
 			/* exception */
-			IJ.log("\tsumSlices: impStack = null");
+			IJ.log("Functions.sumSlices: impStack = null");
 			return -1;
 		}
 		
@@ -396,7 +339,6 @@ public class Functions {
 		
 			a.measure();
 		}
-	
 		
 		double[] percCol = rt.getColumnAsDoubles(rt.getColumnIndex("%Area"));
 		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
@@ -406,60 +348,38 @@ public class Functions {
 		for (int i = 0; i < percCol.length; i++) {
 			sum += (totArea * percCol[i] * scale)/100;
 		}
-
 		
 		return sum;
 	}
 	
-	//from Hemisegment
-	
-	
-		// public static int[] thing (double[] inputList) {
-		// int begin = 0;
-		// double i = inputList[begin];
-		// while(i < 20) {
-			// begin++;
-			// i += inputList[begin];
-		// }
+	/** I think this is the same as sumSlices(), but there might be some small change somewhere */
+	public static double _sumSlices(ImagePlus impStack, double scale) {
+		if (impStack == null) {
+			/* exception */
+			IJ.log("\tsumSlices: impStack = null");
+			return -1;
+		}
 		
-		// int end = inputList.length - 1;
-		// i = inputList[end];
+		ResultsTable rt = new ResultsTable();
+
+		for (int slice = 1; slice <= impStack.getStackSize(); slice++) {
+			impStack.setSlice(slice);
+			Analyzer a = new Analyzer(impStack, (Measurements.AREA|Measurements.AREA_FRACTION), rt);
 		
-		// while (i < 20) {
-			// end--;
-			// i += inputList[end];
-		// }
-		// int[] be = {begin,end};
-		// return be;
-	// }
+			a.measure();
+		}
 	
-	// public static int[] thing (long[] inputList) {
-		// int begin = 0;
-		// long i = inputList[begin];
-		// while(i < 20) {
-			// begin++;
-			// i += inputList[begin];
-		// }
+		double[] percCol = rt.getColumnAsDoubles(rt.getColumnIndex("%Area"));
+		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
 		
-		// int end = inputList.length - 1;
-		// i = inputList[end];
+		double sum = 0;
 		
-		// while (i < 20) {
-			// end--;
-			// i += inputList[end];
-		// }
-		// int[] be = {begin,end};
-		// return be;
-	// }
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		for (int i = 0; i < percCol.length; i++) {
+			sum += (totArea * percCol[i] * scale)/100;
+		}
+
+		return sum;
+	}	
 }
 
 

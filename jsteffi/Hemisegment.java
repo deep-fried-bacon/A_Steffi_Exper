@@ -95,12 +95,9 @@ public class Hemisegment {
 	}
 	
 	public void loadNucs() {
-		
 		rt = new ResultsTable();
 		
-		
 		Overlay nucOverlay = Functions.particleAnalyze(nucBin,GEO,rt);
-		
 		
 		geoHeadings = rt.getHeadings();
 		
@@ -109,8 +106,6 @@ public class Hemisegment {
 			Roi nucRoi = nucOverlay.get(i);
 			int nucRoiX = (int)nucRoi.getContourCentroid()[0];
 			int nucRoiY = (int)nucRoi.getContourCentroid()[1];
-
-			
 			
 			for (Cell c : cells) {
 				if (c.roi.contains(nucRoiX,nucRoiY)) {
@@ -118,17 +113,10 @@ public class Hemisegment {
 					c.nucCount++;
 					continue;
 				}
-			}
-			
-		}
-		
-		
-		
-	
+			}	
+		}	
 	}
 
-
-	
 	public String buildFileName(String suffix) {
 		return (name + suffix);
 	}
@@ -136,7 +124,6 @@ public class Hemisegment {
 	public File buildFile(String suffix) {
 		return new File(path, name + suffix);
 	}
-	
 	
 	
 	public String toString() {

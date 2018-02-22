@@ -32,9 +32,6 @@ public class Experiment {
 	public ArrayList<Nucleus> nucs;
 	
 	
-	
-	
-	
 	public static Experiment experConstructEverything(File path, String outFileSuf, String[] headings) {
 		Experiment exper = new Experiment(path);
 		exper.runEverything();
@@ -47,7 +44,7 @@ public class Experiment {
 		
 		//makePath();		
 		this.path = path;
-		/** experView = new ExperimentView(this) **/
+		/* experView = new ExperimentView(this) */
 		
 		parseName(); // sets name, data, genotype
 
@@ -56,8 +53,6 @@ public class Experiment {
 		createHemisegs(); // sets hemisegs
 		
 		createIterables();
-		
-		//loadNucs();
 	}
 	
 	public void createIterables() {
@@ -72,8 +67,7 @@ public class Experiment {
 			}
 			
 		}
-	}
-	
+	}	
 	
 	public void close() {
 		insts.remove(insts.indexOf(this));
@@ -86,7 +80,6 @@ public class Experiment {
 		for (Hemisegment hemiseg : hemisegs) {
 			hemiseg = null;
 		}
-		//this = null;
 	}
 	
 	public void parseName() {
@@ -107,10 +100,8 @@ public class Experiment {
 				date = LocalDate.of(2000+year, month, day);
 			}
 		}
-		catch (Exception e) {
-			
+		catch (Exception e) {	
 		}
-		
 	}
 	
 	public void loadChannels() {
@@ -121,7 +112,6 @@ public class Experiment {
 		}
 		catch (Exception e) {
 			IJ.log("couldn't open metadata.py");
-			
 		}
 		channels = new Hashtable<String, Integer>();
 		boolean go = false; 
@@ -159,13 +149,12 @@ public class Experiment {
 		}
 	}
 	
+	/** moved to Hemisegment */
 	public void loadNucs() {
 		for (Hemisegment h : hemisegs) {
 			h.loadNucs();
 		}
 	}
-	
-
 	
 	public boolean exportCellData(String fileSuf, String[] headings) {
 		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
@@ -179,9 +168,7 @@ public class Experiment {
 				labels += (headings[i] + ",");
 			}
 			
-		
 			writer.write(labels+"\n");
-			
 			
 			for (Cell c : cells) {
 				String temp = c.hemiseg.name + ",vl"+c.vlNum + ",";
@@ -198,8 +185,6 @@ public class Experiment {
 				writer.write(temp + "\n");
 					
 			}
-			
-			
 			writer.close();
 			return true;
 		}
@@ -216,16 +201,6 @@ public class Experiment {
 
 	}
 		
-		
-		
-		
-		
-		
-		
-	
-	
-	
-	
 	public boolean exportNucData(String fileSuf, String[] headings) {
 		
 		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
@@ -235,7 +210,6 @@ public class Experiment {
 			writer = new BufferedWriter(new FileWriter(outCsv));
 			String labels = "Hemisegment,Cell,NucID,";
 			
-			//for (String heading : headings) {
 			for (int i = 0; i < headings.length; i++) {
 				labels += (headings[i] + ",");
 			}
@@ -278,7 +252,6 @@ public class Experiment {
 		}
 	}
 	
-	
 	public static String headingRename(String heading) {
 		Hashtable<String,String> headingDict = new Hashtable<String,String>();
 		headingDict.put("Thickness(minFeret)", "orthRoi - MinFeret");
@@ -291,8 +264,6 @@ public class Experiment {
 		
 		if (headingDict.containsKey(heading)) return headingDict.get(heading);
 		else return heading;
-
-		
 	}
 	
 	
@@ -303,25 +274,26 @@ public class Experiment {
 		//nucs.get(0).sumSlicesOrthStack();
 		//nucs.get(0).sumSlicesStack();
 		nucs.get(0).allSliceSums();
-
+	}
+	
+	
+	public void testOneCell() {
+		//cells.get(0).thickness();
+		cells.get(0).volume2();
 		
 	}
 	
 	public void forEachCell() {
-		//IJ.log("min,max,mean,gap count");
 		makeNucImps();
 		allSliceSums();
 		
 		for (Cell c : cells) {
 			c.thickness();
 			c.volume2();
-			c.makeTotalAV();
-			
-			
-		}
-		
-		
+			//c.makeTotalAV();	
+		}	
 	}
+	
 	public void testOnOneCell() {
 		Cell c = cells.get(0);
 		//c.makeCellOrthView();
@@ -330,27 +302,20 @@ public class Experiment {
 		
 		c.thickness();
 		
-		
 		//nucs.get(0).makeNucImps();
 		//nucs.get(0).countOrthPixels();
 		//nucs.get(0).yScaled();
 		//nucs.get(0).sumSlicesOrthStack();
 		//nucs.get(0).sumSlicesStack();
 		//nucs.get(0).allSliceSums();
-
-		
 	}
-	
-	
-	
+		
 	public void runEverything() {
 		makeNucImps();
 		countNucOrthPixels();
 		nucYScaled();
 		allSliceSums();
 	}
-	
-	
 	
 	public void makeNucImps() {
 		IJ.log("making nuc cross-sections...");
@@ -365,6 +330,7 @@ public class Experiment {
 			nuc.countOrthPixels();
 		}
 	}
+	
 	public void nucYScaled() {
 		IJ.log("scaling nuc y coordinates to cell");
 		for (Nucleus nuc : nucs) {
@@ -378,14 +344,6 @@ public class Experiment {
 			nuc.allSliceSums();
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	public String toString() {
@@ -417,9 +375,6 @@ public class Experiment {
 		else has += "hemisegFileList, ";
 		if (hemisegs == null) doesntHave += "hemisegs, ";
 		else has += "hemisegs, ";
-		
-		
-		
 		
 		has = has.substring(0, has.length() - 4);
 		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);

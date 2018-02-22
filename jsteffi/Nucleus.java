@@ -26,7 +26,6 @@ public class Nucleus {
 	public Hashtable<String, MutableDouble> data;
 	//public Hashtable<String, MutableDouble[]> sliceData;
 	
-	
 	private ImagePlus stack = null;
 	private ImagePlus orthStack = null;
 	private ImagePlus orth = null;
@@ -42,8 +41,6 @@ public class Nucleus {
 	public double xCal = -1;
 	public double yCal = -1;
 	public double zCal = -1;
-	
-
 
 	
 	public Nucleus (Cell cell, int id, Roi roi, Hashtable<String, MutableDouble> data) {
@@ -57,7 +54,6 @@ public class Nucleus {
 			this.xCal = cell.hemiseg.cal.pixelWidth;
 			this.yCal = cell.hemiseg.cal.pixelHeight;
 			this.zCal = cell.hemiseg.cal.pixelDepth;
-			
 			
 			this.id = id;
 			this.roi = roi;
@@ -80,7 +76,6 @@ public class Nucleus {
 			//cellNucChan d.run(cell.hemiseg.hyp, 1, 1, 1, cell.hemiseg.sliceCount, 1, 1)
 			return;
 		}
-		
 		
 		setStack(Functions.cropStack(cellNucChan, roi));
 			
@@ -125,13 +120,13 @@ public class Nucleus {
 			return;
 		}	
 		
-		Hashtable<String,MutableDouble> poop = Functions.getRtRow(rt,index,"orthRoi");
+		Hashtable<String,MutableDouble> row = Functions.getRtRow(rt,index,"orthRoi");
 		
-		for (String key : poop.keySet()) {
-			//IJ.log(key + " = " + poop.get(key));
-		}
+		// for (String key : row.keySet()) {
+			// //IJ.log(key + " = " + poop.get(key));
+		// }
 		
-		data.putAll(poop);
+		data.putAll(row);
 		orthRoi = nucOrthOverlay.get(index);
 	}
 
@@ -149,19 +144,13 @@ public class Nucleus {
 			IJ.log("\tcountOrthPixels: orthRoi = null");
 			return;
 		}
+		
 		setCroppedOrthStack(Functions.cropStack(orthStack, orthRoi));
-		//orthStack.deleteRoi();
 		int pixelCount = 0;
 		int pixelSum = 0;
 
-		
-		for (int slice = 0; slice < getCroppedOrthStack().getNSlices(); slice++) {
-			//IJ.log("slice " + slice);
-			
+		for (int slice = 0; slice < getCroppedOrthStack().getNSlices(); slice++) {	
 			ImageProcessor ip = getCroppedOrthStack().getProcessor();
-			
-			//int width = ip.getWidth();
-			//int height = ip.getHeight();	
 			
 			byte[] pix = (byte[])ip.getPixels();
 			
@@ -178,10 +167,8 @@ public class Nucleus {
 			}	
 		}
 		
-		//if (data3D == null) data3D = new Hashtable<String,MutableDouble>();
 		data.put("vol pix count", new MutableDouble((double)pixelCount));
 		data.put("vol pix sum", new MutableDouble((double)pixelSum));
-				
 	}
 		
 		
@@ -217,48 +204,31 @@ public class Nucleus {
 			IJ.log("\tsumSlicesOrthStack: orthRoi = null");
 			return;
 		}
+		
 		ImagePlus orthStackCrop = Functions.cropStack(orthStack, orthRoi);
 		
 		double sum = Functions.sumSlices(orthStackCrop, xCal);
 		if (sum == -1) return;
 
 		data.put("orth vol sum", new MutableDouble(sum));
-		
-		
-		//IJ.log("" + bounds);
-		
-		//IJ.log("width = " + data.get("orthRoi - Width"));
-		//IJ.log("height = " +  data.get("orthRoi - Height"));
-		//IJ.log("BX = " + data.get("orthRoi - BX"));
-		//IJ.log("BY = " + data.get("orthRoi - BY"));
-	
-		//for (int slice = 0; slice < orthStack.getStackSize(); slice++) {
-			
-		//}
 	}
 	
 	public void sumSlicesStack() {
-		
-		
 		double sum = Functions.sumSlices(stack, zCal);
 		if (sum == -1) return;
-
 		
 		data.put("stack vol sum", new MutableDouble(sum));
-	
 	}
 	
 	
 	public void sumSlicesSubStack() {
-		
-		//top = cell.hemiseg.cal.getRaw(
-		
 		if (orthRoi == null) {
 			/*exception*/
 			IJ.log(fullId());
 			IJ.log("orthRoi == null");
 			return;
 		}
+		
 		Rectangle bounds = orthRoi.getBounds();
 		
 		int top = bounds.y + 1;
@@ -267,22 +237,15 @@ public class Nucleus {
 		
 		Duplicator d = new Duplicator();
 		ImagePlus croppedStack = d.run(stack,top,bot);
-		
-		//croppedStack.show();
-		//orthThresh.setRoi(orthRoi);
-		//orthThresh.show();
-		
-		//IJ.log("top slice = " + top);
-		//IJ.log("bot slice = " + bot);
 	
 		double sum = Functions.sumSlices(croppedStack, zCal);
 		if (sum != -1) {
 			data.put("cropped stack vol sum", new MutableDouble(sum));
 		}
 		
-		top = top - 2;
+		top = top - 3;
 		if (top < 1) top = 1;
-		bot = bot + 2;
+		bot = bot + 3;
 		if (bot > stack.getStackSize()) bot = stack.getStackSize();
 		ImagePlus croppedStack2 = d.run(stack,top,bot);
 		double sum2 = Functions.sumSlices(croppedStack2, zCal);
@@ -290,28 +253,9 @@ public class Nucleus {
 		if (sum2 != -1) {
 			data.put("cropped stack vol sum2", new MutableDouble(sum2));
 		}
-		
-	
 	}
 	
-	
-	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	public ImagePlus getStack() {
 		return stack;
 	}
@@ -410,6 +354,7 @@ public class Nucleus {
 			this.orthThresh.getCalibration().pixelWidth = yCal;
 			this.orthThresh.getCalibration().pixelHeight = zCal;
 			this.orthThresh.getCalibration().pixelDepth = xCal;
+			
 			return true;
 		}
 	}
@@ -422,20 +367,9 @@ public class Nucleus {
 		else {
 			if (chunkX == -1) chunkX = croppedOrthStack.getNSlices();
 			else if (!(croppedOrthStack.getNSlices() == chunkX)) {
-				//IJ.log("nSlices = " + croppedOrthStack.getNSlices());
-				//IJ.log("chunkX = " + chunkX);
-
 				return false;
 			}
-			
-			/* if (chunkY == -1) chunkY = croppedOrthStack.getWidth();
-			else if (!(croppedOrthStack.getWidth() == chunkY)) {
-				IJ.log("width = " + croppedOrthStack.getWidth());
-				IJ.log("chunkY = " + chunkY);
-				cropped
-				return false;
-			} */
-			
+		
 			this.croppedOrthStack = croppedOrthStack;
 			
 			this.croppedOrthStack.setCalibration(cell.hemiseg.cal.copy());
@@ -443,7 +377,6 @@ public class Nucleus {
 			this.croppedOrthStack.getCalibration().pixelWidth = yCal;
 			this.croppedOrthStack.getCalibration().pixelHeight = zCal;
 			this.croppedOrthStack.getCalibration().pixelDepth = xCal;
-			
 			
 			return true;
 		}
@@ -458,7 +391,6 @@ public class Nucleus {
 	}
 	
 	public String toStringLong() {
-		
 		String has = "Has: ";
 		String doesntHave = "Doesn't Have: ";
 		
@@ -485,7 +417,6 @@ public class Nucleus {
 		else has += "chunkY, ";
 		if (chunkZ == -1) doesntHave += "chunkZ, ";
 		else has += "chunkZ, ";
-		
 		
 		has = has.substring(0, has.length() - 4);
 		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);

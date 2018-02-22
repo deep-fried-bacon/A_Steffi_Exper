@@ -155,6 +155,7 @@ public class Cell {
 	
 	public void thickness() {
 		ArrayList<Double> allCounts = new ArrayList<Double>();
+		ArrayList<Double> allCounts2 = new ArrayList<Double>();
 		int gaps = 0;
 		makeJustCellOrthView();
 		
@@ -168,6 +169,7 @@ public class Cell {
 			
 			for (int x = 0; x < xLength; x++) {
 				int count = 0;
+				
 				for (int y = 0; y < yLength; y++) {
 					boolean started = false;
 					boolean stopped = false;
@@ -183,30 +185,44 @@ public class Cell {
 					}
 					else if (started) stopped = true;
 				}
-				if (count > 0) allCounts.add(hemiseg.cal.getZ(count));
-				
+				if (count > 0) allCounts2.add(hemiseg.cal.getZ(count));
+				allCounts.add(hemiseg.cal.getZ(count));
 			}
 			
 		}
+		
 		double[] temp = arrayStats(allCounts);
+		double[] temp2 = arrayStats(allCounts2);
+
 		
-		data.put("thickness min", new MutableDouble(temp[0]));
-		data.put("thickness max", new MutableDouble(temp[1]));
-		data.put("thickness mean", new MutableDouble(temp[2]));
-		data.put("thickness gap count", new MutableDouble(gaps));
-		double volume = data.get("Area").get() * temp[2];
-		data.put("Volume", new MutableDouble(volume));
+		data.put("thickness min 1", new MutableDouble(temp[0]));
+		data.put("thickness max 1", new MutableDouble(temp[1]));
+		data.put("thickness mean 1", new MutableDouble(temp[2]));
+		data.put("thickness gap count 1", new MutableDouble(gaps));
 		
+		double volume = data.get("Height").get()*data.get("Width").get() * temp[2];
+		data.put("Volume 1", new MutableDouble(volume));
 		
+		data.put("thickness min 0", new MutableDouble(temp2[0]));
+		data.put("thickness max 0", new MutableDouble(temp2[1]));
+		data.put("thickness mean 0", new MutableDouble(temp2[2]));
+		
+		double volume2 = data.get("Area").get() * temp2[2];
+		data.put("Volume 0", new MutableDouble(volume2));
 	}
 	
 	
 	public void volume2() {
-		cellHyp.setC(hemiseg.exper.channels.get("Cell"));
+		int c = hemiseg.exper.channels.get("Cell");
+		cellHyp.setRoi(roi);
+		Duplicator d = new Duplicator();
+		ImagePlus temp = d.run(cellHyp,c,c,1,cellHyp.getNSlices(),1,1);
 
-		double sum = Functions.sumSlices(cellHyp, hemiseg.cal.pixelDepth);
-		data.put("Volume 2", new MutableDouble(sum));
+		IJ.setMinAndMax(temp, 15, 255);
+		IJ.run(temp, "Apply LUT", "stack");
 		
+		double sum = Functions.sumSlices(temp, hemiseg.cal.pixelDepth);
+		data.put("Volume 2", new MutableDouble(sum));
 	}
 	
 	public double[] arrayStats(ArrayList<Double> inArr) {
@@ -236,13 +252,9 @@ public class Cell {
 			if (temp2 != null) nucTotalVolume += temp2.get();
 		}
 		
-		IJ.log("" + this);
-		IJ.log("nucTotalArea = " + nucTotalArea);
-		IJ.log("nucTotalVolume = " + nucTotalVolume);
 		data.put("Nuc Total Area", new MutableDouble(nucTotalArea));
 		data.put("Nuc Total Volume", new MutableDouble(nucTotalVolume));
 	}
-	
 	
 	public MutableDouble yScaled(MutableDouble num) {
 		Rectangle bounds = roi.getBounds();
@@ -255,7 +267,6 @@ public class Cell {
 		
 		MutableDouble outNum = new MutableDouble(yPointScaled);
 		return outNum;
-		
 	}
 	
 	public MutableDouble yScaled(double yPoint) {
@@ -263,13 +274,11 @@ public class Cell {
 		double height = bounds.height;
 		double start = bounds.y;
 		
-		
 		double yPointTemp = yPoint - start;
 		double yPointScaled = yPointTemp/height;
 		
 		MutableDouble outNum = new MutableDouble(yPointScaled);
 		return outNum;
-		
 	}
 	
 	
@@ -282,15 +291,13 @@ public class Cell {
 		}
 		return f;
 	}
-	
-	
-	
+		
+		
 	public String toString() {
 		return ("jsteffi.Cell: " + hemiseg.name + " vl" + vlNum);
 	}
 		
 	public String toStringLong() {
-		
 		String has = "\nHas: ";
 		String doesntHave = "\nDoesn't Have: ";
 		
@@ -308,20 +315,11 @@ public class Cell {
 		else has += "roiX, ";
 		if (roiY == null) doesntHave += "roiY, ";
 		else has += "roiY, ";
-		
-		
-		
+				
 		if (nucs == null) doesntHave += "nucs, ";
 		else has += "nucs, ";
 		if (nucCount == -1) doesntHave += "nucCount, ";
 		else has += "nucCount, ";
-		
-		
-		
-		
-		
-		
-		
 		
 		has = has.substring(0, has.length() - 4);
 		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
@@ -346,9 +344,6 @@ public class Cell {
 		
 		temp += ("\nnucs: " + nucs);
 		temp += ("\nnucCount: " + nucCount);
-		
-		
-		
 		
 		return temp;
 	}
