@@ -11,10 +11,8 @@ import ij.plugin.filter.*;
 import ij.plugin.*;
 import ij.process.*;
 
-
 import java.util.*;
 import java.awt.*;
-
 
 import jsteffi.utilities.*;
 
@@ -60,8 +58,6 @@ public class Nucleus {
 			this.data = data;		
 		}
 	}
-	
-	
 	
 	public void makeNucImps() {	
 		int nucChan = cell.hemiseg.exper.channels.get("Nuclei");
@@ -121,11 +117,7 @@ public class Nucleus {
 		}	
 		
 		Hashtable<String,MutableDouble> row = Functions.getRtRow(rt,index,"orthRoi");
-		
-		// for (String key : row.keySet()) {
-			// //IJ.log(key + " = " + poop.get(key));
-		// }
-		
+				
 		data.putAll(row);
 		orthRoi = nucOrthOverlay.get(index);
 	}
@@ -170,26 +162,19 @@ public class Nucleus {
 		data.put("vol pix count", new MutableDouble((double)pixelCount));
 		data.put("vol pix sum", new MutableDouble((double)pixelSum));
 	}
-		
-		
-	
-	
 
 	public void yScaled () {
 		double inY = data.get("Y").get();
 		double inY2 = cell.hemiseg.cal.getRawY(inY);
 		MutableDouble outY = cell.yScaled(inY2);
 		data.put("Y Scaled to Cell",outY);
-			
 	}
-	
 	
 	public void allSliceSums() {
 		sumSlicesOrthStack();
 		sumSlicesSubStack();
 		sumSlicesStack();
 	}
-	
 	
 	public void sumSlicesOrthStack() {
 		if (orthStack == null) {
@@ -220,7 +205,6 @@ public class Nucleus {
 		data.put("stack vol sum", new MutableDouble(sum));
 	}
 	
-	
 	public void sumSlicesSubStack() {
 		if (orthRoi == null) {
 			/*exception*/
@@ -233,7 +217,6 @@ public class Nucleus {
 		
 		int top = bounds.y + 1;
 		int bot = bounds.y + bounds.height;
-		
 		
 		Duplicator d = new Duplicator();
 		ImagePlus croppedStack = d.run(stack,top,bot);
@@ -418,8 +401,8 @@ public class Nucleus {
 		if (chunkZ == -1) doesntHave += "chunkZ, ";
 		else has += "chunkZ, ";
 		
-		has = has.substring(0, has.length() - 4);
-		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		has = has.substring(0, has.length() - 2);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 2);
 		
 		return (this.toString()
 				+ has + "\n"

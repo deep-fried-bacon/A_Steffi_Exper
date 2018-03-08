@@ -39,12 +39,19 @@ public class Experiment {
 		return exper;
 	}
 	
+	// public static Experiment mridulaConstructor(File path) {
+		// insts.add(this);
+		// this.path = path;
+		// parseName();
+		// loadChannels();
+		// mridulaCreateHemisegs();
+		
+	// }
+	
 	public Experiment(File path) {
 		insts.add(this);
-		
-		//makePath();		
 		this.path = path;
-		/* experView = new ExperimentView(this) */
+		//experView = new ExperimentView(this);
 		
 		parseName(); // sets name, data, genotype
 
@@ -53,6 +60,22 @@ public class Experiment {
 		createHemisegs(); // sets hemisegs
 		
 		createIterables();
+	}
+	
+	public Experiment(File path, int a) {
+		insts.add(this);
+		this.path = path;
+		//experView = new ExperimentView(this);
+		
+		//parseName(); // sets name, data, genotype
+		name = path.getName();
+		loadChannels(); // sets channels 
+
+		mridulaCreateHemisegs(); // sets hemiseg
+		
+		mridulaCreateIterables();
+		
+		
 	}
 	
 	public void createIterables() {
@@ -64,6 +87,16 @@ public class Experiment {
 				for (Nucleus nuc : c.nucs) {
 					nucs.add(nuc);
 				}
+			}
+			
+		}
+	}	
+	
+	public void mridulaCreateIterables() {
+		cells = new ArrayList<Cell>();
+		for (Hemisegment hemiseg : hemisegs) {
+			for (Cell c : hemiseg.cells) {
+				cells.add(c);
 			}
 			
 		}
@@ -103,6 +136,9 @@ public class Experiment {
 		catch (Exception e) {	
 		}
 	}
+	
+	
+
 	
 	public void loadChannels() {
 		File metadata = new File(path, name+"_metadata.py");
@@ -149,12 +185,98 @@ public class Experiment {
 		}
 	}
 	
-	/** moved to Hemisegment */
-	public void loadNucs() {
-		for (Hemisegment h : hemisegs) {
-			h.loadNucs();
+	public void mridulaCreateHemisegs() {
+		hemisegFileList = new ArrayList<File>();
+		hemisegs = new ArrayList<Hemisegment>();
+		File[] subDirs = path.listFiles();
+		
+		for(int i = 0; i < subDirs.length; i++) {
+			if (subDirs[i].getName().startsWith(name) && subDirs[i].isDirectory()) {
+				hemisegFileList.add(subDirs[i]);
+				hemisegs.add(new Hemisegment(this, subDirs[i], 1));
+			}	
 		}
 	}
+	
+	
+	public void mridulaForEachCell() {
+		for (Cell c : cells) {
+			c.mridulaDo();
+		}
+	}
+	
+	public void mridulaDataCsv() {
+		File outCsv = new File(path, name + "_" + "erm" + ".csv");
+		BufferedWriter writer = null;
+		
+		try {
+			writer = new BufferedWriter(new FileWriter(outCsv));
+			String temp = "";
+			for (Cell c : cells) {
+				temp = c.cellID();
+				for (double val : c.data2.get("xCol")) {
+					temp += "," + val;
+				}
+				writer.write(temp + "\n");
+				
+				temp = "Channel 1";
+				for (double val : c.data2.get("Channel 1")) {
+					temp += "," + val;
+				}
+				writer.write(temp + "\n");
+				
+				temp = "Channel 2";
+				for (double val : c.data2.get("Channel 2")) {
+					temp += "," + val;
+				}
+				writer.write(temp + "\n");
+			}
+				
+				
+			//String labels = "Hemisegment,Cell,";
+			
+			// for (int i = 0; i < headings.length; i++) {
+				// labels += (headings[i] + ",");
+			// }
+			
+			// writer.write(labels+"\n");
+			
+			// for (Cell c : cells) {
+				// String temp = c.hemiseg.name + ",vl"+c.vlNum + ",";
+				// for (int i = 0; i < headings.length; i++) {
+					// String heading2 = headingRename(headings[i]);
+					// if (c.data.containsKey(heading2)) {
+						// MutableDouble val = c.data.get(heading2);
+						// if (val != null) {
+							// temp += (c.data.get(heading2));
+						// }
+					// }
+					// temp += ",";
+				// }
+				// writer.write(temp + "\n");
+					
+			// }
+			writer.close();
+			// return true;
+		}
+		catch (FileNotFoundException e) {
+			/** deal with exception appropriately **/
+			IJ.log("FileNotFoundException in Experiment.exportCellData");
+			return;
+		}
+		catch (IOException e) {
+			/** deal with exception appropriately **/
+			IJ.log("IOException in Experiment.exportCellData");
+			return;
+		}
+
+	}
+		
+	
+	
+	
+	
+	
 	
 	public boolean exportCellData(String fileSuf, String[] headings) {
 		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
@@ -202,7 +324,6 @@ public class Experiment {
 	}
 		
 	public boolean exportNucData(String fileSuf, String[] headings) {
-		
 		File outCsv = new File(path, name + "_" + fileSuf + ".csv");
 		BufferedWriter writer = null;
 		
@@ -213,10 +334,7 @@ public class Experiment {
 			for (int i = 0; i < headings.length; i++) {
 				labels += (headings[i] + ",");
 			}
-			
-			
 			writer.write(labels+"\n");
-			
 			
 			for (Cell c : cells) {
 				for (Nucleus nuc : c.nucs) {
@@ -235,7 +353,6 @@ public class Experiment {
 				}	
 				writer.newLine();
 			}
-			
 			
 			writer.close();
 			return true;
@@ -267,7 +384,7 @@ public class Experiment {
 	}
 	
 	
-	public void testOnOneNuc() {
+	public void testOneNuc() {
 		nucs.get(0).makeNucImps();
 		nucs.get(0).countOrthPixels();
 		nucs.get(0).yScaled();
@@ -292,22 +409,6 @@ public class Experiment {
 			c.volume2();
 			//c.makeTotalAV();	
 		}	
-	}
-	
-	public void testOnOneCell() {
-		Cell c = cells.get(0);
-		//c.makeCellOrthView();
-		//c.makeJustCellOrthView();
-		//c.cellOrthStack.show();
-		
-		c.thickness();
-		
-		//nucs.get(0).makeNucImps();
-		//nucs.get(0).countOrthPixels();
-		//nucs.get(0).yScaled();
-		//nucs.get(0).sumSlicesOrthStack();
-		//nucs.get(0).sumSlicesStack();
-		//nucs.get(0).allSliceSums();
 	}
 		
 	public void runEverything() {
@@ -351,7 +452,6 @@ public class Experiment {
 	}
 	
 	public String toStringLong() {
-		
 		String has = "\nHas: ";
 		String doesntHave = "\nDoesn't Have: ";
 		
@@ -376,8 +476,8 @@ public class Experiment {
 		if (hemisegs == null) doesntHave += "hemisegs, ";
 		else has += "hemisegs, ";
 		
-		has = has.substring(0, has.length() - 4);
-		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		has = has.substring(0, has.length() - 2);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 2);
 		
 		return (this.toString()
 				+ has

@@ -21,9 +21,7 @@ import jsteffi.utilities.*;
 
 public class Functions {
 	
-	/**
-		if channels == null, uses all channels
-		*/
+	/** if channels == null, uses all channels */
 	public static ImagePlus verticalCrossSection(ImagePlus imp, int[] channels) {
 		if (imp == null) return null;
 		if (channels == null) {
@@ -32,7 +30,6 @@ public class Functions {
 				channels[i] = i+1;
 			}
 		}
-		
 		ImageStack impStack = imp.getStack();
 		
 		int xLength = imp.getDimensions()[0];
@@ -60,7 +57,6 @@ public class Functions {
 				outStack.setPixels(xSlice,x*channels.length+i+1);			
 			}
 		}			
-		
 		outImp.setStack(outStack);
 		outImp.setOpenAsHyperStack(true);
 		outImp.setDimensions(channels.length,xLength,1);
@@ -68,19 +64,16 @@ public class Functions {
 		return outImp;
 	}	
 	
-	/**
-		if channels == null, uses all channels
-		*/
+	/** changes were made to vertical that haven't been made to horizontal yet
+		if channels == null, uses all channels */
 	public static ImagePlus horizontalCrossSection(ImagePlus imp, int[] channels) {
-		
 		if (imp == null) return null;
 		if (channels == null) {
 			channels = new int[imp.getNSlices()];
 			for (int i = 0; i < channels.length; i++) {
 				channels[i] = i+1;
 			}
-		}
-		
+		}		
 		ImageStack impStack = imp.getStack();
 		
 		int xLength = imp.getDimensions()[0];
@@ -88,7 +81,6 @@ public class Functions {
 		
 		int staticChannelCount = imp.getDimensions()[2];
 		int zLength = imp.getDimensions()[3];
-		
 		
 		//ImageStack[] outStacks = new ImageStack[channels.length];
 		ImageStack outStack = new ImageStack(xLength, zLength, channels.length*yLength);
@@ -100,7 +92,6 @@ public class Functions {
 		for (int i = 0; i < channels.length; i++) {
 			int channel = channels[i];
 			//ImageStack sliceHolder = new ImageStack(yLength,zLength);
-			
 			for (int y = 0; y < yLength; y++) {
 				byte[] ySlice = new byte[xLength*zLength];
 				
@@ -120,19 +111,14 @@ public class Functions {
 			}
 			//outStacks[i] = (sliceHolder.duplicate());
 		}			
-		
-		
 		//ImagePlus[] outImps = new ImagePlus[outStacks.length];
 		// for (int i = 0; i < outImps.length; i++) {
 			// ImagePlus temp = new ImagePlus((""+(i)), outStacks[i]);
 			// outImps[i] = temp.duplicate();
 		// }
-		 
-	
 		return outImp;
 	}	
-	
-	
+		
 	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum) {
 		String[] headings = rt.getHeadings();
 		int colCount = headings.length;
@@ -149,15 +135,12 @@ public class Functions {
 				}
 			}
 			else {
-			
 				double val = rt.getValueAsDouble(colIndex,rowNum);
-			
 				row.put(heading,new MutableDouble(val));
 			}
 		}
 		return row;
 	}
-
 	
 	public static Hashtable<String,MutableDouble> getRtRow(ResultsTable rt, int rowNum, String prefix) {
 		String[] headings = rt.getHeadings();
@@ -175,16 +158,13 @@ public class Functions {
 				}
 			}
 			else {
-			
 				double val = rt.getValueAsDouble(colIndex,rowNum);
-			
 				row.put(prefix + " - " + heading, new MutableDouble(val));
 			}
 		}
 		return row;
 	}
 
-	
 	/** returns a duplicate imp, doesn't change original image */
 	public static ImagePlus cropStack(ImagePlus imp, Roi r) {
 		imp.setRoi(r);
@@ -193,8 +173,8 @@ public class Functions {
 		return outImp;
 	}
 
-	/* z-Projection */
-		//setOrth((new ZProjector()).run(getOrthStack(),"max"));
+	/** z-Projection 
+		imp2 = (new ZProjector()).run(imp,"max"); */
 	
 	/** works on both a single image or the current slice of a stack 
 		makes a duplicate image, doesn't change original */
@@ -215,7 +195,6 @@ public class Functions {
 		Object[] temp = at.exec(imp, method, false, false, true, false, false, false);
 		ImagePlus outImp = (ImagePlus)temp[1];
 		return outImp;
-		
 	}
 	
 	/** untested!!! */
@@ -268,14 +247,11 @@ public class Functions {
 							count++;
 							started = true;
 						}
-					
 					}
 					else if (started) stopped = true;
 				}
 				if (count > 0) allCounts.add(count);
-				
 			}
-			
 		}
 		Hashtable<String, MutableDouble> outHashtable = arrayStats(allCounts, "Thickness");
 		outHashtable.put("avgThickness gap count", new MutableDouble(gaps));
@@ -304,7 +280,7 @@ public class Functions {
 	
 	/** untested modified version of cell.arrayStats(),
 		with added prefix option */
-	public Hashtable<String,MutableDouble> arrayStats(ArrayList<Integer> inArr, String prefix) {
+	public static Hashtable<String,MutableDouble> arrayStats(ArrayList<Integer> inArr, String prefix) {
 		double min = inArr.get(0).intValue();
 		double max = inArr.get(0).intValue();
 		double sum = 0;
@@ -336,7 +312,6 @@ public class Functions {
 			impStack.setSlice(slice);
 			Analyzer a = new Analyzer(impStack, (Measurements.AREA|Measurements.AREA_FRACTION), rt);
 	
-		
 			a.measure();
 		}
 		
@@ -348,18 +323,20 @@ public class Functions {
 		for (int i = 0; i < percCol.length; i++) {
 			sum += (totArea * percCol[i] * scale)/100;
 		}
-		
+				rt.show("butts");
+
 		return sum;
 	}
 	
-	/** I think this is the same as sumSlices(), but there might be some small change somewhere */
+	/** I think this is the same as sumSlices(),
+		but there might be some small change somewhere
+		probably can just delete */
 	public static double _sumSlices(ImagePlus impStack, double scale) {
 		if (impStack == null) {
 			/* exception */
-			IJ.log("\tsumSlices: impStack = null");
+			IJ.log("Functions.sumSlices: impStack = null");
 			return -1;
 		}
-		
 		ResultsTable rt = new ResultsTable();
 
 		for (int slice = 1; slice <= impStack.getStackSize(); slice++) {
@@ -368,7 +345,6 @@ public class Functions {
 		
 			a.measure();
 		}
-	
 		double[] percCol = rt.getColumnAsDoubles(rt.getColumnIndex("%Area"));
 		double totArea = rt.getValueAsDouble(rt.getColumnIndex("Area"),0);
 		

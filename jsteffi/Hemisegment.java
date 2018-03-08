@@ -59,8 +59,23 @@ public class Hemisegment {
 		loadNucs();
 	}
 	
+	public Hemisegment (Experiment exper, File hsPath, int a) {
+		this.exper = exper;
+		this.path = hsPath;
+		name = path.getName();
+		IJ.log("starting hemiseg:" + name);
+
+		loadFiles();	// sets fileList, (if files are there) hyp -->(cal, sliceCount), 
+						// nucBin, vl3Csv-->(vl3), vl4Csv-->(vl4)
+		//loadNucs();
+	}
+	
 	public void loadFiles() {
 		File[] allFiles = path.listFiles();
+		for(File f : allFiles) {
+			//IJ.log("\t" + f.getName());
+		}
+			
 
 		for (int i = 0; i < allFiles.length; i++) {			
 			if (allFiles[i].getName().equals(buildFileName(HYP_SUF))) {
@@ -73,9 +88,12 @@ public class Hemisegment {
 			}
 			else if (allFiles[i].getName().equals(buildFileName(VL3_CSV_SUF))) {
 				vl3Csv = allFiles[i];
+				//IJ.log("\t\tvl3");
+
 			}
 			else if (allFiles[i].getName().equals(buildFileName(VL4_CSV_SUF))) {
 				vl4Csv = allFiles[i];
+				//IJ.log("\t\tvl4");
 			}
 			else {
 				fileList.add(allFiles[i]);
@@ -170,13 +188,8 @@ public class Hemisegment {
 		if (vl4 == null) doesntHave += "vl4, ";
 		else has += "vl4, ";
 		
-		
-		
-		
-		
-		
-		has = has.substring(0, has.length() - 4);
-		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		has = has.substring(0, has.length() - 2);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 2);
 		
 		return (this.toString() 
 				+ has
@@ -205,9 +218,7 @@ public class Hemisegment {
 		temp += ("\nvl4Csv: " + vl4Csv);
 		
 		temp += ("\nvl3: " + vl3);
-		temp += ("\nvl4: " + vl4);
-		
-		
+		temp += ("\nvl4: " + vl4);		
 		
 		return temp;
 	}

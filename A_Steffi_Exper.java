@@ -1,4 +1,3 @@
-//package A_Steffi_Exper;
 import ij.plugin.PlugIn;
 import ij.*;
 import ij.io.*;
@@ -8,9 +7,6 @@ import java.io.File;
 
 import jsteffi.*;
 import jsteffi.utilities.*;
-
-
-
 
 
 public class A_Steffi_Exper implements PlugIn{
@@ -33,14 +29,17 @@ public class A_Steffi_Exper implements PlugIn{
 				"C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150729_w1118",
 				"C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\150910_Dm2-EGFP",
 				"C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151021_Dm2-GFPRNAi",
-				"C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151216_Dm2-GFP"
+				"C:\\Users\\localuser\\Desktop\\Code Laboratory\\Steffi\\Steffi NMJ datasets\\151216_Dm2-GFP",
+				
+				"C:\\Amelia\\Lab\\Mridula\\day6"
 			};
 
 		//int[] whichOnes = {0,1,2,3};
-		int[] whichOnes = {1};
+		int[] whichOnes = {4};
 		
-		boolean nuc = true;
+		boolean nuc = false;
 		boolean cell = false;
+		boolean mridula = true;
 		
 		for (int i = 0; i < whichOnes.length; i++) {
 			File path = new File(experPaths[whichOnes[i]]);
@@ -59,16 +58,25 @@ public class A_Steffi_Exper implements PlugIn{
 				String[] cellHeadings = {"Area","Volume 0", "Volume 1", "Volume 2","thickness mean 0", "thickness mean 1","Nuc Total Area","Nuc Total Volume"};
 				
 				Experiment e = new Experiment(path);
-				// e.testOneCell();
-				e.forEachCell();
-				e.exportCellData(cellFileSuf,cellHeadings);
+				e.testOneCell();
+				//e.forEachCell();
+				//e.exportCellData(cellFileSuf,cellHeadings);
 			}
 			
-			if (whichOnes.length > 2) {
-				e.close();
-				e = null;
-				System.gc();
+			if (mridula) {
+				String cellFileSuf = "erm";
+				String[] mridulaHeadings = {};
+				Experiment e = new Experiment(path,1);
+				//e.exportCellData(cellFileSuf, mridulaHeadings);
+				e.mridulaForEachCell();
+				e.mridulaDataCsv();
 			}
+			
+			// //if (whichOnes.length > 2) {
+				// e.close();
+				// e = null;
+				// System.gc();
+			// }
 		}
 	}
 	

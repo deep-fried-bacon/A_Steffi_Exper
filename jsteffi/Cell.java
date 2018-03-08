@@ -26,19 +26,16 @@ public class Cell {
 	
 	public ArrayList<Double> roiX = new ArrayList<Double>(0);
 	public ArrayList<Double> roiY = new ArrayList<Double>(0);
-
-	//public 
+ 
 	public Hashtable<String,MutableDouble> data = new Hashtable<String,MutableDouble>();
-	//Rectangle bounds =
-	
-	//public boolean nucsLoaded = false;
+	public Hashtable<String,double[]> data2 = new Hashtable<String,double[]>();
 
 	public ArrayList<Nucleus> nucs = new ArrayList<Nucleus>();
 	public int nucCount = 0;
 	
-		
 	public ImagePlus cellHyp = null;
 	public ImagePlus cellOrthStack = null;
+	public ImagePlus cellOrth = null;
 	int xLength;
 	int yLength;
 		
@@ -52,14 +49,79 @@ public class Cell {
 		this.vlNum = vlNum;
 		
 		this.roiPath = roiPath;
+		//IJ.log("before openRoiCsv");
 		roi = openRoiCsv(roiPath, cal);
+		//IJ.log("roi = " + roi);
 		makeCellHyp();
 			
 		makeGeoData();
-		// Hemisegment loads nuc right after
-		
+		// Hemisegment loads nuc when it finishes loading both cells	
 	}
 	
+	
+	public void mridulaDo() {
+		makeCellOrthView();
+		cellOrth = (new ZProjector()).run(cellOrthStack,"sum");
+		data2.put("xCol",makeXCol());
+		data2.put("Channel 1", longitudinalIntensity(1));
+		data2.put("Channel 2", longitudinalIntensity(2));
+
+	}
+	
+	public double[] makeXCol() {
+		int width = cellOrth.getWidth();
+		double[] xCol = new double[width];
+		for (int i = 0; i < width; i++) {
+			xCol[i] = i;
+		}
+		return xCol;
+	}
+	
+	public double[] longitudinalIntensity(int channel) {
+		int width = cellOrth.getWidth();
+		int height = cellOrth.getHeight();
+		
+		//cellOrth.setC(hemiseg.exper.channels.get("Cell"));
+		cellOrth.setC(channel);
+		ImageProcessor ip = cellOrth.getProcessor();			
+		float[] pixels = (float[])ip.getPixels();
+		
+		//int pix = pixels[y*xLength + x]&0xff;
+		
+		
+		
+		double[] sums = new double[width];
+		
+		for (int x = 0; x < width; x++) {
+			double sum = 0;
+			for (int y = 0; y < height; y++) {
+				//sum += (pixels[y*width + x]&0xff);
+				sum += (pixels[y*width + x]);
+				
+			}
+			//IJ.log("" + x + ", " + sum);
+			sums[x] = sum;
+			
+		}
+		
+		
+		
+		double[] sums2 = new double[sums.length];
+		
+		double mean = 0;
+		
+		for (double val : sums) {
+			mean += val;
+		}
+		mean = mean/sums.length;
+		
+		for (int i = 0; i < sums.length; i++) {
+			sums2[i] = sums[i]/mean;
+		}
+		
+		return sums2;
+		
+	}
 	
 	public void makeGeoData() {
 		cellHyp.setRoi(roi);
@@ -69,13 +131,23 @@ public class Cell {
 		a.measure();
 		
 		data = Functions.getRtRow(rt,0);
-
-
 	}
 		
 	public Roi openRoiCsv(File roiCsvPath, Calibration cal) {
 		try (Scanner sc = new Scanner(roiCsvPath)) {
 			sc.useDelimiter(",|\\s");
+			
+			//String tempStr = sc.next();
+			if (sc.hasNextDouble()) {
+				roiX.add(cal.getRawX(sc.nextDouble()));
+				if (sc.hasNextDouble()) {
+					roiY.add(cal.getRawY(sc.nextDouble()));
+				}
+			}
+			else {
+				sc.next();
+				sc.next();
+			}
 			
 			while (sc.hasNextDouble()) {
 				double temp = sc.nextDouble();
@@ -86,7 +158,7 @@ public class Cell {
 					roiY.add(cal.getRawY(temp));
 				}
 				else {
-					/*** exception ***/
+					/** exception */
 					IJ.log("shit, in Cell.openRoiCsv, got x value with no matching y value");
 				}
 			}
@@ -94,22 +166,15 @@ public class Cell {
 			float[] yF = ArrLisDouToArrFlo(roiY);
 			
 			return new PolygonRoi(xF,yF,2);
-			
-			
-			
 		}
 		catch (FileNotFoundException e) {
 			/*** exception ***/
 			IJ.log("in Cell.openRoiCsv exception: " + e);
 			return null;
 		}
-		
-		
-		
 	}	
 		
 	public void makeCellHyp() {
-		
 		cellHyp = Functions.cropStack(hemiseg.hyp, roi);
 		
 		PolygonRoi tempRoi = new PolygonRoi(roi.getFloatPolygon(),2);
@@ -130,13 +195,7 @@ public class Cell {
 		
 		zLength = cellHyp.getDimensions()[3];
 	}
-	
-	
-	
-	
-	
-	
-	
+		
 	public void makeCellOrthView() {
 		if (cellHyp == null) {
 			makeCellHyp();
@@ -291,7 +350,11 @@ public class Cell {
 		}
 		return f;
 	}
-		
+	
+	public String cellID () {
+		return ("" + hemiseg.name + " vl" + vlNum);
+	}
+
 		
 	public String toString() {
 		return ("jsteffi.Cell: " + hemiseg.name + " vl" + vlNum);
@@ -321,8 +384,8 @@ public class Cell {
 		if (nucCount == -1) doesntHave += "nucCount, ";
 		else has += "nucCount, ";
 		
-		has = has.substring(0, has.length() - 4);
-		doesntHave = doesntHave.substring(0, doesntHave.length() - 4);
+		has = has.substring(0, has.length() - 2);
+		doesntHave = doesntHave.substring(0, doesntHave.length() - 2);
 		
 		return (this.toString()
 				+ has
